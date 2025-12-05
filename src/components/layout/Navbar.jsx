@@ -2,28 +2,25 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Nav links
   const navLinks = [
     { name: "Features", path: "/features" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
 
-  // Handle link click
   const handleLinkClick = (path) => {
     setIsOpen(false);
     navigate(path);
@@ -51,15 +48,20 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
+          
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Zap className="h-8 w-8 text-purple-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <img
+              src="/favicon.png"
+              alt="CampusBuzz Logo"
+              className="h-12 w-12 object-contain"
+            />
+            <span className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               CampusBuzz
             </span>
           </Link>
 
-          {/* Desktop Nav Links */}
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -85,7 +87,7 @@ const Navbar = () => {
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Toggle */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -120,6 +122,7 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
+
               <div className="pt-4 pb-3 border-t border-gray-200">
                 <div className="flex items-center px-5 space-x-4">
                   <Button
