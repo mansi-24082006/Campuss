@@ -8,17 +8,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Calendar, Trophy, Download, Users, Clock, MapPin, LogOut } from 'lucide-react';
+import { Calendar, Download, Clock, MapPin, LogOut } from 'lucide-react';
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [events, setEvents] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
-    // Load mock data
     const mockEvents = [
       {
         id: 1,
@@ -79,52 +77,42 @@ const StudentDashboard = () => {
         certificate: false
       },
       {
-  id: 3,
-  title: "AI & Machine Learning Bootcamp",
-  date: "2024-06-12",
-  status: "completed",
-  score: 92,
-  certificate: true
-},
-{
-  id: 4,
-  title: "Cybersecurity Awareness Seminar",
-  date: "2024-07-05",
-  status: "completed",
-  score: 78,
-  certificate: true
-},
-{
-  id: 5,
-  title: "Robotics Competition",
-  date: "2024-08-18",
-  status: "upcoming",
-  score: null,
-  certificate: false
-},
-{
-  id: 6,
-  title: "Cloud Computing Workshop",
-  date: "2024-09-02",
-  status: "upcoming",
-  score: null,
-  certificate: false
-}
-
-    ];
-
-    const mockLeaderboard = [
-      { rank: 1, name: "Alice Johnson", score: 2450, events: 12 },
-      { rank: 2, name: "Bob Smith", score: 2380, events: 11 },
-      { rank: 3, name: "Charlie Brown", score: 2290, events: 10 },
-      { rank: 4, name: user.name, score: 2150, events: 9 },
-      { rank: 5, name: "Diana Prince", score: 2100, events: 8 }
+        id: 3,
+        title: "AI & Machine Learning Bootcamp",
+        date: "2024-06-12",
+        status: "completed",
+        score: 92,
+        certificate: true
+      },
+      {
+        id: 4,
+        title: "Cybersecurity Awareness Seminar",
+        date: "2024-07-05",
+        status: "completed",
+        score: 78,
+        certificate: true
+      },
+      {
+        id: 5,
+        title: "Robotics Competition",
+        date: "2024-08-18",
+        status: "upcoming",
+        score: null,
+        certificate: false
+      },
+      {
+        id: 6,
+        title: "Cloud Computing Workshop",
+        date: "2024-09-02",
+        status: "upcoming",
+        score: null,
+        certificate: false
+      }
     ];
 
     setEvents(mockEvents);
     setRegisteredEvents(mockRegistered);
-    setLeaderboard(mockLeaderboard);
-  }, [user.name]);
+  }, []);
 
   const handleRegister = (event) => {
     toast({
@@ -135,7 +123,7 @@ const StudentDashboard = () => {
 
   const handleDownloadCertificate = (eventTitle) => {
     toast({
-      title: "🚧 Certificate download isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀",
+      title: "🚧 Certificate download isn't implemented yet!",
     });
   };
 
@@ -153,9 +141,8 @@ const StudentDashboard = () => {
     <>
       <Helmet>
         <title>Student Dashboard - CampusBuzz</title>
-        <meta name="description" content="Manage your events, view your progress, and discover new opportunities on your student dashboard." />
       </Helmet>
-      
+
       <div className="min-h-screen p-4 md:p-6">
         {/* Header */}
         <motion.div
@@ -170,7 +157,9 @@ const StudentDashboard = () => {
               <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user.name}!</h1>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Welcome back, {user.name}!
+              </h1>
               <p className="text-gray-600">Ready to explore new events?</p>
             </div>
           </div>
@@ -181,14 +170,13 @@ const StudentDashboard = () => {
         </motion.div>
 
         <Tabs defaultValue="events" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/70">
+          <TabsList className="grid w-full grid-cols-3 bg-white/70">
             <TabsTrigger value="events">Available Events</TabsTrigger>
             <TabsTrigger value="registered">My Events</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
-          {/* Available Events */}
+          {/* Events */}
           <TabsContent value="events">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -205,10 +193,10 @@ const StudentDashboard = () => {
                 >
                   <Card className="card-hover glass-effect border-0 h-full">
                     <div className="relative">
-                      <img  
+                      <img
                         alt={`${event.title} event banner`}
                         className="w-full h-48 object-cover rounded-t-lg"
-                        src={event.image} // Now uses event.image from mockEvents
+                        src={event.image}
                       />
                       <Badge className={`absolute top-4 right-4 ${getCategoryColor(event.category)}`}>
                         {event.category}
@@ -235,15 +223,17 @@ const StudentDashboard = () => {
                           <span>{event.location}</span>
                         </div>
                       </div>
-                      
+
                       <div className="border-t pt-4">
-                        <p className="text-sm font-medium text-gray-800">Speaker: {event.speaker}</p>
+                        <p className="text-sm font-medium text-gray-800">
+                          Speaker: {event.speaker}
+                        </p>
                         <p className="text-xs text-gray-600">{event.speakerBio}</p>
                       </div>
-                      
-                      <Button 
+
+                      <Button
                         onClick={() => handleRegister(event)}
-                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600"
                       >
                         Register Now
                       </Button>
@@ -286,8 +276,8 @@ const StudentDashboard = () => {
                             </div>
                           )}
                           {event.certificate && (
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               onClick={() => handleDownloadCertificate(event.title)}
                               className="flex items-center space-x-2"
                             >
@@ -301,58 +291,6 @@ const StudentDashboard = () => {
                   </Card>
                 </motion.div>
               ))}
-            </motion.div>
-          </TabsContent>
-
-          {/* Leaderboard */}
-          <TabsContent value="leaderboard">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Card className="glass-effect border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Trophy className="h-6 w-6 text-yellow-500" />
-                    <span>Campus Leaderboard</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Top performers across all events
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {leaderboard.map((student, index) => (
-                      <motion.div
-                        key={student.rank}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
-                        className={`flex items-center justify-between p-4 rounded-lg ${
-                          student.name === user.name ? 'bg-purple-100 border-2 border-purple-300' : 'bg-white/50'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                            student.rank <= 3 ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white' : 'bg-gray-200'
-                          }`}>
-                            {student.rank}
-                          </div>
-                          <div>
-                            <p className="font-medium">{student.name}</p>
-                            <p className="text-sm text-gray-600">{student.events} events</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-purple-600">{student.score}</p>
-                          <p className="text-xs text-gray-500">points</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </motion.div>
           </TabsContent>
 
@@ -370,11 +308,14 @@ const StudentDashboard = () => {
                     Manage your account details and preferences
                   </CardDescription>
                 </CardHeader>
+
                 <CardContent className="space-y-6">
                   <div className="flex items-center space-x-4">
                     <Avatar className="h-20 w-20">
                       <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="text-2xl">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-2xl">
+                        {user.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="text-xl font-semibold">{user.name}</h3>
@@ -382,7 +323,7 @@ const StudentDashboard = () => {
                       <Badge className="mt-2">Student</Badge>
                     </div>
                   </div>
-                  
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <h4 className="font-medium">Statistics</h4>
@@ -392,28 +333,22 @@ const StudentDashboard = () => {
                           <span className="font-medium">9</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Total Points:</span>
-                          <span className="font-medium">2,150</span>
-                        </div>
-                        <div className="flex justify-between">
                           <span className="text-gray-600">Certificates:</span>
                           <span className="font-medium">7</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Current Rank:</span>
-                          <span className="font-medium">#4</span>
-                        </div>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <h4 className="font-medium">Preferences</h4>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full"
-                        onClick={() => toast({
-                          title: "🚧 Profile editing isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀",
-                        })}
+                        onClick={() =>
+                          toast({
+                            title: "🚧 Profile editing isn't implemented yet!",
+                          })
+                        }
                       >
                         Edit Profile
                       </Button>
