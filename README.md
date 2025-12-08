@@ -89,3 +89,4 @@ npm run build
 Frontend: Deploy the dist/ folder to GitHub Pages or Vercel
 Backend: Deploy your server to Render / Hostinger / Railway
 Database: Use MongoDB Atlas (cloud-hosted MongoDB)
+
