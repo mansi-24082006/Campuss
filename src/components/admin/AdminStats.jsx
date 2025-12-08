@@ -9,7 +9,6 @@ const statItems = [
   { icon: TrendingUp, key: 'activeEvents', label: 'Active Events', color: 'text-purple-600' },
   { icon: UserCheck, key: 'totalParticipations', label: 'Participations', color: 'text-orange-600' },
   { icon: Award, key: 'certificatesIssued', label: 'Certificates', color: 'text-yellow-600' },
-  { icon: BarChart3, key: 'averageRating', label: 'Avg Rating', color: 'text-pink-600' }
 ];
 
 const AdminStats = ({ stats }) => {
