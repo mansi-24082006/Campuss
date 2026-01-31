@@ -1,15 +1,28 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    fullName: { type: String, required: true },
-    collegeName: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
-    role: { type: String, enum: ["student", "faculty", "Admin"], default: "student" },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
+    name: String,
+    email: { type: String, unique: true },
+    password: String,
+    role: {
+      type: String,
+      enum: ["admin", "faculty", "student"],
+      default: "student",
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
+});
 
 export default mongoose.model("User", userSchema);
