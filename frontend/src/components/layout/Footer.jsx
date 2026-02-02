@@ -4,9 +4,7 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const socialLinks = [
-    { icon: Twitter, href: '#' },
-    { icon: Instagram, href: '#' },
-    { icon: Facebook, href: '#' },
+    { icon: Instagram, href: 'https://www.instagram.com/campussbuzz_80/#' },
   ];
 
   const footerLinks = [
@@ -21,7 +19,11 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-4">
-              <Zap className="h-8 w-8 text-purple-400" />
+               <img
+              src="/favicon.png"
+              alt="CampusBuzz Logo"
+              className="h-10 w-10 object-contain"
+            />
               <span className="text-2xl font-bold gradient-text">CampusBuzz</span>
             </Link>
             <p className="text-gray-400 text-sm">
