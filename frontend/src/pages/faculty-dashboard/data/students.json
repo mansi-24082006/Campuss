@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "Alice Johnson",
+    "email": "alice@university.edu",
+    "event": "Data Structures Workshop",
+    "department": "Computer Engineering"
+  },
+  {
+    "id": 2,
+    "name": "Bob Smith",
+    "email": "bob@university.edu",
+    "event": "Data Structures Workshop",
+    "department": "Computer Engineering"
+  },
+  {
+    "id": 3,
+    "name": "Charlie Brown",
+    "email": "charlie@university.edu",
+    "event": "Algorithm Design Competition",
+    "department": "Information Technology"
+  },
+  {
+    "id": 4,
+    "name": "Diana Prince",
+    "email": "diana@university.edu",
+    "event": "Machine Learning Seminar",
+    "department": "Computer Engineering"
+  }
+]
