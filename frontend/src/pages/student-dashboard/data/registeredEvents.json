@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "Hackathon 2024",
+    "date": "2024-02-28",
+    "status": "completed",
+    "score": 85,
+    "certificate": true,
+    "type": "non-technical",
+    "department": "Computer"
+  },
+  {
+    "id": 2,
+    "title": "Web Development Workshop",
+    "date": "2024-03-10",
+    "status": "upcoming",
+    "score": null,
+    "certificate": false,
+    "type": "technical",
+    "department": "IT"
+  },
+  {
+    "id": 3,
+    "title": "AI & Machine Learning Bootcamp",
+    "date": "2024-06-12",
+    "status": "completed",
+    "score": 92,
+    "certificate": true,
+    "type": "technical",
+    "department": "Computer"
+  },
+  {
+    "id": 4,
+    "title": "Cybersecurity Awareness Seminar",
+    "date": "2024-07-05",
+    "status": "completed",
+    "score": 78,
+    "certificate": true,
+    "type": "technical",
+    "department": "IT"
+  },
+  {
+    "id": 5,
+    "title": "Robotics Competition",
+    "date": "2024-08-18",
+    "status": "upcoming",
+    "score": null,
+    "certificate": false,
+    "type": "technical",
+    "department": "Mechanical"
+  },
+  {
+    "id": 6,
+    "title": "Cloud Computing Workshop",
+    "date": "2024-09-02",
+    "status": "upcoming",
+    "score": null,
+    "certificate": false,
+    "type": "technical",
+    "department": "Computer"
+  }
+]
