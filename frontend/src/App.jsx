@@ -1,160 +1,80 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Helmet } from "react-helmet";
-import { Toaster } from "@/components/ui/toaster";
 
-// Context Providers
-import { AuthProvider } from "@/contexts/AuthContext";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-// Public Pages
-import LandingPage from "@/pages/LandingPage";
-import LoginPage from "@/pages/LoginPage";
-import SignupPage from "@/pages/SignUp";
-import FeaturesPage from "@/pages/FeaturesPage";
-import AboutPage from "@/pages/AboutPage";
-import ContactPage from "@/pages/ContactPage";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-// Student Dashboard
-import StudentDashboard from "@/pages/student-dashboard/StudentDashboard";
-import AvailableEvents from "@/pages/student-dashboard/AvailableEvents";
-import MyEvents from "@/pages/student-dashboard/MyEvents";
-import ProfileSection from "@/pages/student-dashboard/ProfileSection";
-
-// Faculty Dashboard
-import FacultyDashboard from "@/pages/faculty-dashboard/FacultyDashboard";
-import FacultyMyEvents from "@/pages/faculty-dashboard/MyEvents";
-import FacultyStudentList from "@/pages/faculty-dashboard/StudentList";
-import FacultyProfile from "@/pages/faculty-dashboard/ProfileSection";
-
-// Admin Dashboard - UPDATED PATH
-import AdminDashboard from "@/pages/AdminDashboard";
-
-// Event Details
-import EventDetails from "@/pages/EventDetails";
-
-// Components
-import ProtectedRoute from "@/components/ui/ProtectedRoute";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <Helmet>
-          <title>CampusBuzz - College Event Aggregator</title>
-          <meta
-            name="description"
-            content="Discover, register, and manage college events with CampusBuzz"
-          />
-        </Helmet>
-
-        {/* GLOBAL WRAPPER 
-            Added dark:bg-slate-950 to ensure the entire screen background 
-            changes when the theme toggles.
-          */}
-        <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300">
-          <Navbar />
-
-          <main className="flex-grow pt-20">
-            <Routes>
-              {/* -------------------- PUBLIC ROUTES -------------------- */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-
-              {/* -------------------- STUDENT ROUTES -------------------- */}
-              <Route
-                path="/student"
-                element={
-                  <ProtectedRoute allowedRoles={["student"]}>
-                    <StudentDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/student/available-events"
-                element={
-                  <ProtectedRoute allowedRoles={["student"]}>
-                    <AvailableEvents />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/student/my-events"
-                element={
-                  <ProtectedRoute allowedRoles={["student"]}>
-                    <MyEvents />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/student/profile"
-                element={
-                  <ProtectedRoute allowedRoles={["student"]}>
-                    <ProfileSection />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* -------------------- FACULTY ROUTES -------------------- */}
-              <Route
-                path="/faculty"
-                element={
-                  <ProtectedRoute allowedRoles={["faculty"]}>
-                    <FacultyDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/faculty/my-events"
-                element={
-                  <ProtectedRoute allowedRoles={["faculty"]}>
-                    <FacultyMyEvents />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/faculty/students"
-                element={
-                  <ProtectedRoute allowedRoles={["faculty"]}>
-                    <FacultyStudentList />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/faculty/profile"
-                element={
-                  <ProtectedRoute allowedRoles={["faculty"]}>
-                    <FacultyProfile />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* -------------------- ADMIN ROUTES -------------------- */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={["admin"]}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* -------------------- EVENT DETAILS -------------------- */}
-              <Route path="/event/:id" element={<EventDetails />} />
-            </Routes>
-          </main>
-
-          <Footer />
-          <Toaster />
-        </div>
-      </Router>
-    </AuthProvider>
-  );
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
 }
 
-export default App;
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: linear-gradient(135deg, #fef7ff 0%, #f0f9ff 25%, #f0fdf4 50%, #fefce8 75%, #fef2f2 100%);
+  color: hsl(var(--foreground));
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.floating-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+  50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); }
+}
