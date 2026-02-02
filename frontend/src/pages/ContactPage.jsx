@@ -38,8 +38,8 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: "Email Us",
-      content: "campussBuzz@gmail.com",
-      href: "mailto:campussBuzz@gmail.com",
+      content: "campussbuzz80@gmail.com",
+      href: "mailto:campussbuzz80@gmail.com",
     },
     {
       icon: Phone,
@@ -50,8 +50,8 @@ const ContactPage = () => {
     {
       icon: MapPin,
       title: "Find Us",
-      content: "123 University Ave, Innovation City",
-      href: "#",
+      content: "SSASIT, Surat, Gujarat, India",
+      href: "https://www.google.com/maps/place/SSASIT/data=!4m2!3m1!1s0x0:0x116fcdb2bd69883d?sa=X&ved=1t:2428&ictx=111",
     },
   ];
 
