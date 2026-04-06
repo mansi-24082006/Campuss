@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '@/lib/axios';
 
 const AuthContext = createContext();
 
@@ -16,16 +17,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('campusbuzz_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const storedUser = localStorage.getItem('campusbuzz_user');
+      if (!storedUser) {
+        setLoading(false);
+        return;
+      }
+
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      try {
+        // Verification/Refresh from backend
+        const { data } = await api.get(`/users/${parsedUser._id}`);
+        const fullUser = { ...data, token: parsedUser.token };
+        setUser(fullUser);
+        localStorage.setItem('campusbuzz_user', JSON.stringify(fullUser));
+      } catch (error) {
+        console.error("Session verification failed:", error);
+        if (error.response?.status === 401) {
+          logout();
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('campusbuzz_user', JSON.stringify(userData));
+  const login = (userData, token) => {
+    const fullUser = { ...userData, token };
+    setUser(fullUser);
+    localStorage.setItem('campusbuzz_user', JSON.stringify(fullUser));
   };
 
   const logout = () => {
@@ -33,10 +57,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('campusbuzz_user');
   };
 
+  const updateUser = (updatedData) => {
+    const fullUser = { ...user, ...updatedData };
+    setUser(fullUser);
+    localStorage.setItem('campusbuzz_user', JSON.stringify(fullUser));
+  };
+
   const value = {
     user,
     login,
     logout,
+    updateUser,
     loading
   };
 

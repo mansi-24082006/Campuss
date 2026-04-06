@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,8 +38,8 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: "Email Us",
-      content: "campussBuzz@gmail.com",
-      href: "mailto:campussBuzz@gmail.com",
+      content: "campussbuzz80@gmail.com",
+      href: "mailto:campussbuzz80@gmail.com",
     },
     {
       icon: Phone,
@@ -50,8 +50,8 @@ const ContactPage = () => {
     {
       icon: MapPin,
       title: "Find Us",
-      content: "123 University Ave, Innovation City",
-      href: "#",
+      content: "SSASIT, Surat, Gujarat, India",
+      href: "https://www.google.com/maps/place/SSASIT/data=!4m2!3m1!1s0x0:0x116fcdb2bd69883d?sa=X&ved=1t:2428&ictx=111",
     },
   ];
 
@@ -61,7 +61,7 @@ const ContactPage = () => {
         <title>Contact Us - CampusBuzz</title>
         <meta name="description" content="Get in touch with the CampusBuzz team. We're here to help with any questions or feedback." />
       </Helmet>
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-16 px-4">
+      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-16 px-4 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -30 }}
@@ -72,7 +72,7 @@ const ContactPage = () => {
             <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text">
               Get In Touch
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
               Have questions, feedback, or need support? We'd love to hear from you.
             </p>
           </motion.div>
@@ -86,7 +86,7 @@ const ContactPage = () => {
             >
               <Card className="glass-effect border-0 shadow-lg p-4 sm:p-8">
                 <CardHeader>
-                  <CardTitle className="text-3xl">Send us a Message</CardTitle>
+                  <CardTitle className="text-3xl text-slate-900 dark:text-white">Send us a Message</CardTitle>
                   <CardDescription>
                     Fill out the form and our team will get back to you shortly.
                   </CardDescription>
@@ -94,36 +94,36 @@ const ContactPage = () => {
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                      <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
                       <Input
                         id="name"
                         type="text"
                         placeholder="John Doe"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="mt-1 bg-white/70"
+                        className="mt-1 bg-white/70 dark:bg-slate-900/70 dark:text-white dark:border-slate-800"
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                      <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
                       <Input
                         id="email"
                         type="email"
                         placeholder="you@example.com"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="mt-1 bg-white/70"
+                        className="mt-1 bg-white/70 dark:bg-slate-900/70 dark:text-white dark:border-slate-800"
                       />
                     </div>
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
+                      <label htmlFor="message" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Message</label>
                       <textarea
                         id="message"
                         rows="5"
                         placeholder="Your message here..."
                         value={formData.message}
                         onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm bg-white/70 p-2"
+                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-800 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm bg-white/70 dark:bg-slate-900/70 p-2 dark:text-white"
                       ></textarea>
                     </div>
                     <Button
@@ -153,7 +153,7 @@ const ContactPage = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-2xl font-semibold text-gray-800">{info.title}</h3>
+                    <h3 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{info.title}</h3>
                     <a
                       href={info.href}
                       className="text-lg text-purple-600 hover:underline"

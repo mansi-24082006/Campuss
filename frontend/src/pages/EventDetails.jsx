@@ -1,14 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
-import { Calendar, Clock, MapPin, Users, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, ArrowLeft, ExternalLink, Sparkles, Award, ShieldCheck, X } from 'lucide-react';
+import { getAvatarUrl } from "@/lib/avatar";
+import api from "@/lib/axios";
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -17,344 +18,309 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate loading event details
-    setTimeout(() => {
-      const mockEvent = {
-        id: parseInt(id),
-        title: "TechFest 2024 - Innovation Summit",
-        category: "Tech Fest",
-        date: "2024-03-15",
-        time: "10:00 AM - 6:00 PM",
-        location: "Main Auditorium, University Campus",
-        description: "Join us for the biggest technology festival of the year! TechFest 2024 brings together students, faculty, and industry experts for a day of innovation, learning, and networking. Experience cutting-edge technology demonstrations, participate in coding competitions, attend insightful workshops, and connect with like-minded individuals passionate about technology.",
-        longDescription: "TechFest 2024 is more than just an event - it's a celebration of innovation and technology that brings together the brightest minds from across the campus and beyond. This year's theme focuses on 'Technology for Tomorrow' with special emphasis on AI, sustainability, and digital transformation. The event features multiple tracks including competitive programming, hackathons, tech talks, startup pitches, and interactive workshops led by industry professionals.",
-        speaker: {
-          name: "Dr. Sarah Johnson",
-          title: "AI Research Scientist at Google",
-          bio: "Dr. Sarah Johnson is a leading AI researcher with over 15 years of experience in machine learning and artificial intelligence. She has published over 50 research papers and holds multiple patents in the field of neural networks. Currently leading Google's AI Ethics team, she is passionate about responsible AI development and its applications in solving real-world problems.",
-          image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400",
-          linkedin: "https://linkedin.com/in/sarahjohnson",
-          twitter: "https://twitter.com/sarahjohnsonai"
-        },
-        organizer: "Computer Science Department",
-        registrationLink: "https://techfest2024.com/register",
-        maxParticipants: 500,
-        currentParticipants: 342,
-        tags: ["AI", "Machine Learning", "Innovation", "Technology", "Networking"],
-        schedule: [
-          { time: "10:00 AM", activity: "Registration & Welcome Coffee" },
-          { time: "11:00 AM", activity: "Keynote: Future of AI by Dr. Sarah Johnson" },
-          { time: "12:30 PM", activity: "Tech Demos & Exhibitions" },
-          { time: "2:00 PM", activity: "Lunch & Networking" },
-          { time: "3:00 PM", activity: "Hackathon Begins" },
-          { time: "5:00 PM", activity: "Startup Pitch Competition" },
-          { time: "6:00 PM", activity: "Awards & Closing Ceremony" }
-        ],
-        requirements: [
-          "Laptop with development environment setup",
-          "University ID for entry",
-          "Enthusiasm for technology and innovation"
-        ],
-        prizes: [
-          "1st Place: $5,000 + Internship Opportunity",
-          "2nd Place: $3,000 + Tech Gadgets",
-          "3rd Place: $1,000 + Certificates"
-        ]
-      };
-      setEvent(mockEvent);
+  const fetchEvent = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get(`/events/${id}`);
+      setEvent(data);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load event details. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [id]);
-
-  const handleRegister = () => {
-    toast({
-      title: "Registration Successful!",
-      description: `You've been registered for ${event.title}`,
-    });
+    }
   };
 
-  const handleExternalLink = (url) => {
-    toast({
-      title: "🚧 External links aren't implemented yet—but don't worry! You can request it in your next prompt! 🚀",
-    });
+  useEffect(() => {
+    if (id) fetchEvent();
+  }, [id]);
+
+  const handleRegister = async () => {
+    try {
+      const res = await api.post(`/events/${id}/register`);
+      toast({
+        title: res.data?.waitlisted ? "Added to Waitlist! 📋" : "Registration Successful! 🎉",
+        description: res.data?.waitlisted 
+          ? `You're on the waitlist for ${event?.title}`
+          : `You've been successfully registered for ${event?.title}`,
+      });
+      fetchEvent();
+    } catch (error) {
+      toast({
+        title: "Registration Failed",
+        description: error.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-600 border-r-4 border-r-transparent"></div>
+          <p className="text-slate-500 font-medium animate-pulse">Loading Event Details...</p>
+        </div>
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Event Not Found</h2>
-          <Button onClick={() => navigate('/')}>Go Back Home</Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+        <Card className="max-w-md w-full text-center p-8 rounded-3xl shadow-xl border-0">
+          <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+            <X className="text-red-500" size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Event Not Found</h2>
+          <p className="text-slate-500 mb-8">The event you're looking for doesn't exist or has been removed.</p>
+          <Button 
+            onClick={() => navigate('/student')} 
+            className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-xl py-6 font-bold"
+          >
+            Go Back to Dashboard
+          </Button>
+        </Card>
       </div>
     );
   }
 
+  // Helper formatting
+  const eventDate = event.date ? new Date(event.date).toLocaleDateString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }) : "Date TBD";
+
+  const eventTime = event.date ? new Date(event.date).toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : "Time TBD";
+
   return (
     <>
       <Helmet>
-        <title>{event.title} - CampusBuzz</title>
+        <title>{event.title || "Event Details"} | CampusBuzz</title>
         <meta name="description" content={event.description} />
       </Helmet>
-      
-      <div className="min-h-screen p-4 md:p-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <Button 
-            variant="outline" 
-            onClick={() => navigate(-1)}
-            className="mb-4 flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
-          </Button>
-        </motion.div>
 
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Hero Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Card className="glass-effect border-0 overflow-hidden">
-              <div className="relative">
-                <img  
-                  alt={`${event.title} main banner`}
-                  className="w-full h-64 md:h-80 object-cover"
-                 src="https://images.unsplash.com/photo-1695480497603-381a2bee1c05" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-6 left-6 right-6 text-white">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge className="bg-white/20 text-white border-white/30">
-                      {event.category}
-                    </Badge>
-                    {event.tags.slice(0, 3).map((tag, index) => (
-                      <Badge key={index} variant="outline" className="bg-white/10 text-white border-white/30">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-2">{event.title}</h1>
-                  <p className="text-lg opacity-90">Organized by {event.organizer}</p>
+      <div className="min-h-screen bg-[#f8fafc] pb-20">
+        {/* Banner Section */}
+        <div className="relative h-[300px] md:h-[450px] w-full overflow-hidden bg-slate-900">
+          <img
+            alt={event.title}
+            className="w-full h-full object-cover opacity-60"
+            src="https://images.unsplash.com/photo-1540575861501-7ad05823c9f5?auto=format&fit=crop&q=80&w=2070" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent" />
+          
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(-1)}
+                  className="mb-6 text-white hover:bg-white/10 flex items-center gap-2 -ml-2"
+                >
+                  <ArrowLeft size={18} />
+                  <span>Back to Events</span>
+                </Button>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 py-1 px-3">
+                    {event.category || event.type || "Event"}
+                  </Badge>
+                  <Badge variant="outline" className="text-white border-white/30 backdrop-blur-md py-1 px-3">
+                    {event.participationLevel || "Open"} Level
+                  </Badge>
                 </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Event Details */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <Card className="glass-effect border-0">
-                  <CardHeader>
-                    <CardTitle>About This Event</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-gray-700 leading-relaxed">{event.description}</p>
-                    <p className="text-gray-700 leading-relaxed">{event.longDescription}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Speaker Profile */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <Card className="glass-effect border-0">
-                  <CardHeader>
-                    <CardTitle>Featured Speaker</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex-shrink-0">
-                        <img  
-                          alt={`${event.speaker.name} profile photo`}
-                          className="w-32 h-32 rounded-full object-cover"
-                         src="https://images.unsplash.com/photo-1674566114911-cd9b71354d39" />
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="text-xl font-semibold">{event.speaker.name}</h3>
-                          <p className="text-purple-600 font-medium">{event.speaker.title}</p>
-                        </div>
-                        <p className="text-gray-700 leading-relaxed">{event.speaker.bio}</p>
-                        <div className="flex space-x-3">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleExternalLink(event.speaker.linkedin)}
-                            className="flex items-center space-x-2"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            <span>LinkedIn</span>
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleExternalLink(event.speaker.twitter)}
-                            className="flex items-center space-x-2"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            <span>Twitter</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Schedule */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <Card className="glass-effect border-0">
-                  <CardHeader>
-                    <CardTitle>Event Schedule</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {event.schedule.map((item, index) => (
-                        <div key={index} className="flex items-start space-x-4 p-3 bg-white/50 rounded-lg">
-                          <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium min-w-fit">
-                            {item.time}
-                          </div>
-                          <p className="text-gray-700">{item.activity}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 tracking-tight">
+                  {event.title}
+                </h1>
+                
+                <div className="flex flex-wrap items-center gap-6 text-indigo-100/80 font-medium">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={18} className="text-indigo-400" />
+                    <span>{eventDate}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin size={18} className="text-indigo-400" />
+                    <span>{event.venue || "Campus Location"}</span>
+                  </div>
+                </div>
               </motion.div>
             </div>
+          </div>
+        </div>
 
-            {/* Sidebar */}
+        <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-10">
+          <div className="grid lg:grid-cols-3 gap-8">
+            
+            {/* Left Column: Details */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Description */}
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
+              >
+                <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                  <Sparkles className="text-indigo-600" /> About the Event
+                </h2>
+                <div className="prose prose-slate max-w-none">
+                  <p className="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap">
+                    {event.description || "No description provided for this event."}
+                  </p>
+                </div>
+              </motion.section>
+
+              {/* Speakers (if any) */}
+              {event.speakers?.length > 0 && (
+                <motion.section
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
+                >
+                  <h2 className="text-2xl font-bold text-slate-800 mb-8">Featured Speakers</h2>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    {event.speakers.map((speaker, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <Avatar className="h-16 w-16 border-2 border-indigo-100">
+                          <AvatarImage src={getAvatarUrl(speaker)} alt={speaker.name} />
+                          <AvatarFallback className="bg-indigo-600 text-white font-bold">
+                            {speaker.name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-bold text-slate-800">{speaker.name}</h3>
+                          <p className="text-xs text-indigo-600 font-semibold">{speaker.organization || "Expert"}</p>
+                          <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">{speaker.bio || "Event Speaker"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.section>
+              )}
+
+              {/* Rules & Prizes */}
+              <div className="grid sm:grid-cols-2 gap-6">
+                <motion.section
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100"
+                >
+                  <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                    <ShieldCheck className="text-emerald-500" /> Rules
+                  </h2>
+                  <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                    {event.rules || "No specific rules provided. Standard campus guidelines apply."}
+                  </p>
+                </motion.section>
+
+                <motion.section
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  className="bg-indigo-600 rounded-3xl p-8 shadow-xl shadow-indigo-100 text-white"
+                >
+                  <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
+                    <Award className="text-indigo-200" /> Prizes & Recognition
+                  </h2>
+                  <p className="text-indigo-50 text-sm leading-relaxed whitespace-pre-wrap">
+                    {event.prizeDetails || "Participants will receive certificates and XP points for the global leaderboard!"}
+                  </p>
+                </motion.section>
+              </div>
+            </div>
+
+            {/* Right Column: Sidebar */}
             <div className="space-y-6">
-              {/* Registration Card */}
               <motion.div
-                initial={{ opacity: 0, x: 30 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white rounded-3xl p-8 shadow-lg border border-slate-100 sticky top-24"
               >
-                <Card className="glass-effect border-0 sticky top-6">
-                  <CardHeader>
-                    <CardTitle>Event Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3 text-gray-700">
-                        <Calendar className="h-5 w-5 text-purple-600" />
-                        <span>{event.date}</span>
+                <div className="mb-8">
+                  <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Event Info</h3>
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <Clock size={20} />
                       </div>
-                      <div className="flex items-center space-x-3 text-gray-700">
-                        <Clock className="h-5 w-5 text-purple-600" />
-                        <span>{event.time}</span>
-                      </div>
-                      <div className="flex items-center space-x-3 text-gray-700">
-                        <MapPin className="h-5 w-5 text-purple-600" />
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center space-x-3 text-gray-700">
-                        <Users className="h-5 w-5 text-purple-600" />
-                        <span>{event.currentParticipants}/{event.maxParticipants} registered</span>
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase">Time</p>
+                        <p className="text-slate-700 font-semibold">{eventTime}</p>
                       </div>
                     </div>
-
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full"
-                        style={{ width: `${(event.currentParticipants / event.maxParticipants) * 100}%` }}
-                      ></div>
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                        <Users size={20} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase">Capacity</p>
+                        <p className="text-slate-700 font-semibold">
+                          {event.registeredStudents?.length || 0} / {event.registrationLimit || "No Limit"}
+                        </p>
+                      </div>
                     </div>
+                  </div>
+                </div>
 
-                    <Button 
-                      onClick={handleRegister}
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-                      size="lg"
+                <div className="mb-8">
+                  <p className="text-xs text-slate-400 font-bold uppercase mb-2">Organizer</p>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                      <AvatarImage src={getAvatarUrl(event.organizer)} />
+                      <AvatarFallback className="bg-slate-900 text-white font-bold text-xs">
+                        {event.organizer?.fullName?.charAt(0) || "C"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{event.organizer?.fullName || "Campus Faculty"}</p>
+                      <p className="text-[10px] text-slate-500">{event.organizer?.collegeName || "CampusBuzz Platform"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Google Calendar Link */}
+                  {event.date && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 rounded-2xl font-bold border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 border-dashed"
+                      onClick={() => {
+                        const start = new Date(event.date).toISOString().replace(/-|:|\.\d+/g, "");
+                        const end = new Date(new Date(event.date).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d+/g, "");
+                        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(event.description || "")}&location=${encodeURIComponent(event.venue || "Campus")}`;
+                        window.open(url, "_blank");
+                      }}
                     >
-                      Register Now
+                      <Calendar size={16} className="mr-2" /> Add to Calendar
                     </Button>
-
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleExternalLink(event.registrationLink)}
-                      className="w-full flex items-center space-x-2"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span>External Registration</span>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Requirements */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <Card className="glass-effect border-0">
-                  <CardHeader>
-                    <CardTitle>Requirements</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {event.requirements.map((req, index) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          <span className="text-purple-600 mt-1">•</span>
-                          <span className="text-gray-700 text-sm">{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Prizes */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <Card className="glass-effect border-0">
-                  <CardHeader>
-                    <CardTitle>Prizes & Awards</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {event.prizes.map((prize, index) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          <span className="text-yellow-600 mt-1">🏆</span>
-                          <span className="text-gray-700 text-sm">{prize}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+                  )}
+                  <Button
+                    onClick={handleRegister}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 h-14 rounded-2xl font-extrabold text-lg shadow-lg shadow-indigo-100"
+                  >
+                    Register Now
+                  </Button>
+                  <p className="text-center text-[10px] text-slate-400 px-4">
+                    By registering, you agree to the event rules and campus conduct guidelines.
+                  </p>
+                </div>
               </motion.div>
             </div>
           </div>

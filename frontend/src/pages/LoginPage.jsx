@@ -1,193 +1,223 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { Eye, EyeOff, Lock, Mail, ArrowRight } from "lucide-react";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
-import { User, GraduationCap, Shield } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { roleData } from "@/lib/roles.js";
+import api from "@/lib/axios";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [activeRole, setActiveRole] = useState("student");
+
+  const { user, login, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  const handleLogin = async (role) => {
+  useEffect(() => {
+    if (!authLoading && user) {
+      const from = location.state?.from?.pathname || `/${user.role}`;
+      navigate(from, { replace: true });
+    }
+  }, [user, authLoading, navigate, location]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
     if (!email || !password) {
       toast({
         title: "Missing Information",
         description: "Please enter both email and password",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
-      const userData = {
-        id: Date.now(),
-        email,
-        role,
-        name: email.split('@')[0],
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-      };
-      
-      login(userData);
-      
+    try {
+      const { data } = await api.post("/auth/login", { email, password, role: activeRole });
+
+      login(data.user, data.token);
+
       toast({
-        title: "Welcome to CampusBuzz!",
-        description: `Successfully logged in as ${role}`,
+        title: "Welcome back!",
+        description: data.message || `Successfully logged in as ${activeRole}`,
       });
-      
-      // Redirect based on role
-      switch (role) {
-        case 'student':
-          navigate('/student');
-          break;
-        case 'faculty':
-          navigate('/faculty');
-          break;
-        case 'admin':
-          navigate('/admin');
-          break;
-        default:
-          navigate('/');
-      }
-      
+
+      // Redirect back to intended page or default dashboard
+      const from = location.state?.from?.pathname || `/${activeRole}`;
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error("Login Error:", error.response?.data || error.message);
+      toast({
+        title: "Login Failed",
+        description: error.response?.data?.message || "Invalid credentials",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  const roleData = [
-    {
-      key: 'student',
-      label: 'Student',
-      icon: User,
-      description: 'Discover and register for exciting campus events',
-      color: 'from-blue-500 to-purple-500'
-    },
-    {
-      key: 'faculty',
-      label: 'Faculty',
-      icon: GraduationCap,
-      description: 'Manage events and track student performance',
-      color: 'from-green-500 to-blue-500'
-    },
-    {
-      key: 'admin',
-      label: 'Admin',
-      icon: Shield,
-      description: 'Full platform control and event management',
-      color: 'from-purple-500 to-pink-500'
-    }
-  ];
+  const currentRoleInfo = roleData.find(r => r.key === activeRole);
 
   return (
     <>
       <Helmet>
-        <title>Login - CampusBuzz</title>
-        <meta name="description" content="Login to CampusBuzz to access your personalized dashboard and manage your college events." />
+        <title>Login | CampusBuzz</title>
+        <meta
+          name="description"
+          content="Login to CampusBuzz to access your personalized dashboard."
+        />
       </Helmet>
-      
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100/30 via-blue-100/30 to-pink-100/30"></div>
-        
+
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-[-15%] left-[5%] w-[30rem] h-[30rem] bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           className="relative w-full max-w-md"
         >
-          <Card className="glass-effect border-0 shadow-2xl">
-            <CardHeader className="text-center">
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <CardTitle className="text-3xl font-bold gradient-text mb-2">
-                  Welcome Back
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  Choose your role to access CampusBuzz
-                </CardDescription>
-              </motion.div>
+          <Card className="glass-effect border-white/20 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] rounded-[2.5rem] overflow-hidden">
+            <CardHeader className="text-center pt-8 pb-4">
+              <div className="mx-auto w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm mb-4 border border-slate-100 dark:border-slate-800">
+                <img src="/favicon.png" alt="Logo" className="w-10 h-10" />
+              </div>
+              <CardTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Welcome Back
+              </CardTitle>
+              <CardDescription className="text-slate-500 dark:text-slate-400 font-medium">
+                Choose your role and enter credentials
+              </CardDescription>
             </CardHeader>
-            
-            <CardContent>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="space-y-6"
-              >
-                <div className="space-y-4">
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/70 border-purple-200 focus:border-purple-400"
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/70 border-purple-200 focus:border-purple-400"
-                  />
-                </div>
 
-                <Tabs defaultValue="student" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 bg-white/50">
+            <CardContent className="px-5 sm:px-8 pb-10">
+              <form onSubmit={handleLogin} className="space-y-6">
+                {/* Role Tabs */}
+                <Tabs value={activeRole} onValueChange={setActiveRole} className="w-full">
+                  <TabsList className="grid grid-cols-3 bg-slate-100/80 dark:bg-slate-800/50 p-1 rounded-2xl h-auto min-h-[3rem]">
                     {roleData.map((role) => (
-                      <TabsTrigger 
-                        key={role.key} 
+                      <TabsTrigger
+                        key={role.key}
                         value={role.key}
-                        className="data-[state=active]:bg-white data-[state=active]:text-purple-700"
+                        className="rounded-xl py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2"
                       >
-                        <role.icon className="h-4 w-4 mr-1" />
-                        {role.label}
+                        <role.icon className="h-4 w-4" />
+                        <span className="font-bold text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-normal">{role.label}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
-                  
-                  {roleData.map((role) => (
-                    <TabsContent key={role.key} value={role.key} className="mt-4">
-                      <div className="text-center space-y-4">
-                        <div className={`mx-auto p-3 bg-gradient-to-r ${role.color} rounded-full w-fit`}>
-                          <role.icon className="h-8 w-8 text-white" />
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                          {role.description}
-                        </p>
-                        <Button
-                          onClick={() => handleLogin(role.key)}
-                          disabled={loading}
-                          className={`w-full bg-gradient-to-r ${role.color} hover:opacity-90 text-white`}
-                        >
-                          {loading ? 'Signing In...' : `Login as ${role.label}`}
-                        </Button>
-                      </div>
-                    </TabsContent>
-                  ))}
                 </Tabs>
 
-                <div className="text-center">
-                  <p className="text-sm text-gray-500">
-                    Demo credentials: any email/password combination
-                  </p>
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    </div>
+                    <Input
+                      type="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-11 h-12 rounded-xl border-slate-200 dark:border-slate-800 focus:ring-indigo-600 focus:border-indigo-600 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm dark:text-white"
+                    />
+                  </div>
+
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    </div>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-11 pr-11 h-12 rounded-xl border-slate-200 dark:border-slate-800 focus:ring-indigo-600 focus:border-indigo-600 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </motion.div>
+
+                <div className="flex items-center justify-between px-1">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 transition-colors" />
+                    <span className="text-sm font-medium text-slate-500 group-hover:text-slate-700">Remember me</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => toast({ title: "Forgot Password?", description: "Please contact your system administrator to reset your password.", variant: "default" })}
+                    className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full h-12 rounded-2xl bg-gradient-to-r ${currentRoleInfo?.color || 'from-indigo-600 to-blue-600'} text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 active:scale-[0.98]`}
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <span className="animate-pulse">Signing in...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <span>Sign In as {currentRoleInfo?.label}</span>
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
+                  )}
+                </Button>
+
+                <p className="text-center text-slate-500 font-medium">
+                  New to CampusBuzz?{" "}
+                  <Link to="/signup" className="text-indigo-600 font-bold hover:underline">
+                    Create account
+                  </Link>
+                </p>
+              </form>
             </CardContent>
           </Card>
         </motion.div>
@@ -197,3 +227,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

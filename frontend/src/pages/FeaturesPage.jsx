@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Calendar, Users, Trophy, BookOpen, Zap, Star, ShieldCheck, BarChart2, MessageSquare } from 'lucide-react';
@@ -17,18 +17,13 @@ const FeaturesPage = () => {
       description: "One-click registration for events with unique, shareable links. Manage all your sign-ups in one place.",
     },
     {
-      icon: Trophy,
-      title: "Dynamic & Gamified Scoreboard",
-      description: "Track your performance in competitions with a live, LeetCode-style scoreboard. Earn points and climb the ranks!",
-    },
-    {
       icon: BookOpen,
       title: "Detailed Speaker & Event Profiles",
       description: "Get to know event speakers through detailed bios and access comprehensive event information before you attend.",
     },
     {
       icon: Zap,
-      title: "Automated Certificate Generation",
+      title: "Certificate Generation",
       description: "Instantly receive and download personalized, verifiable certificates upon successful event completion.",
     },
     {
@@ -36,15 +31,10 @@ const FeaturesPage = () => {
       title: "Role-Based Dashboards",
       description: "Customized dashboards for students, faculty, and administrators, providing tailored tools and insights.",
     },
-     {
+    {
       icon: ShieldCheck,
       title: "Secure Admin Controls",
       description: "Admins have full control over event creation, user management, and platform-wide settings for a secure environment.",
-    },
-    {
-      icon: BarChart2,
-      title: "Advanced Analytics",
-      description: "Faculty and admins can access detailed analytics on event attendance, student performance, and engagement.",
     },
     {
       icon: MessageSquare,
@@ -59,7 +49,7 @@ const FeaturesPage = () => {
         <title>Features - CampusBuzz</title>
         <meta name="description" content="Explore the powerful features of CampusBuzz, designed to enhance the college event experience for everyone." />
       </Helmet>
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-16 px-4">
+      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-16 px-4 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -30 }}
@@ -70,7 +60,7 @@ const FeaturesPage = () => {
             <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text">
               Platform Features
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
               Everything you need to revolutionize the campus event experience, all in one place.
             </p>
           </motion.div>
@@ -89,12 +79,12 @@ const FeaturesPage = () => {
                     <div className="p-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full w-fit mb-4">
                       <feature.icon className="h-8 w-8 text-white" />
                     </div>
-                    <CardTitle className="text-2xl font-semibold text-gray-800">
+                    <CardTitle className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-gray-600 text-center text-base">
+                    <CardDescription className="text-slate-600 dark:text-slate-400 text-center text-base">
                       {feature.description}
                     </CardDescription>
                   </CardContent>
