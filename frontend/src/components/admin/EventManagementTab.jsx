@@ -72,7 +72,6 @@ const EventManagementTab = ({ events, onStatusUpdate, toast }) => {
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
-  const pendingCount = events.filter((e) => e.status === "pending").length;
 
   return (
     <>
@@ -83,11 +82,6 @@ const EventManagementTab = ({ events, onStatusUpdate, toast }) => {
             <h2 className="text-2xl font-bold text-slate-800">Event Management</h2>
             <p className="text-sm text-slate-500 mt-0.5">
               {events.length} events total
-              {pendingCount > 0 && (
-                <span className="ml-2 text-orange-600 font-semibold">
-                  • {pendingCount} pending approval
-                </span>
-              )}
             </p>
           </div>
 
@@ -115,14 +109,6 @@ const EventManagementTab = ({ events, onStatusUpdate, toast }) => {
                 <List className="h-4 w-4" />
               </Button>
             </div>
-
-            <Button
-              onClick={handleCreateEvent}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex-1 sm:flex-none shadow-md shadow-indigo-100"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Event
-            </Button>
           </div>
         </div>
 
@@ -131,13 +117,7 @@ const EventManagementTab = ({ events, onStatusUpdate, toast }) => {
           <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
             <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500 font-medium">No events yet</p>
-            <p className="text-slate-400 text-sm mt-1">Create your first event to get started</p>
-            <Button
-              onClick={handleCreateEvent}
-              className="mt-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl"
-            >
-              <Plus className="h-4 w-4 mr-2" /> Create Event
-            </Button>
+            <p className="text-slate-400 text-sm mt-1">Events created by faculty will appear here for your review.</p>
           </div>
         )}
 
@@ -250,7 +230,7 @@ const EventManagementTab = ({ events, onStatusUpdate, toast }) => {
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">
                           By {event.organizer?.fullName || "Admin"} &nbsp;•&nbsp; {event.type || event.category}
-                          {event.venue && <> &nbsp;•&nbsp; 📍 {event.venue}</>}
+                          {event.venue && <> &nbsp;•&nbsp; {event.venue}</>}
                         </p>
                       </div>
                     </div>
@@ -316,21 +296,6 @@ const EventManagementTab = ({ events, onStatusUpdate, toast }) => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Create / Edit Event Modal */}
-      <CreateEventModal
-        key={editingEvent ? editingEvent._id : "admin-new-event"}
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          setEditingEvent(null);
-        }}
-        onSuccess={() => {
-          onStatusUpdate();
-          setShowCreateModal(false);
-          setEditingEvent(null);
-        }}
-        eventData={editingEvent}
-      />
     </>
   );
 };

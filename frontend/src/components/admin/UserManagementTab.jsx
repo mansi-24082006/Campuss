@@ -1,9 +1,9 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import {
   Plus,
   UserCog,
@@ -12,12 +12,24 @@ import {
   ShieldCheck,
   UserCheck,
   Trash2,
-  Lock,
+  AlertTriangle,
+  Search,
+  UserMinus
 } from "lucide-react";
 import { getAvatarUrl } from "@/lib/avatar";
+import { useAuth } from "@/contexts/AuthContext"; // Assuming you have this to prevent self-deletion
 import api from "@/lib/axios";
 
-const UserManagementTab = ({ users, onRefresh, toast }) => {
+const UserManagementTab = ({ users = [], onRefresh, toast }) => {
+  const { user: currentUser } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter users based on search
+  const filteredUsers = users.filter(u =>
+    u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const handleRoleToggle = async (user) => {
     const roles = ["student", "faculty", "admin"];
     const currentIndex = roles.indexOf(user.role);
@@ -31,181 +43,215 @@ const UserManagementTab = ({ users, onRefresh, toast }) => {
       });
       onRefresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update role",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to update role", variant: "destructive" });
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+  const handleDeleteUser = async (user) => {
+    if (user._id === currentUser?._id) {
+      return toast({ title: "Action Denied", description: "You cannot delete your own account.", variant: "destructive" });
+    }
+
+    if (window.confirm(`Permanently delete ${user.fullName}? This cannot be undone.`)) {
       try {
-        await api.delete(`/users/${userId}`);
-        toast({
-          title: "User Deleted",
-          description: "The user has been removed from the system.",
-        });
+        await api.delete(`/users/${user._id}`);
+        toast({ title: "User Deleted", description: "Account successfully purged." });
         onRefresh();
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to delete user",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Failed to delete user", variant: "destructive" });
       }
+    }
+  };
+
+  const handleFlagUser = async (user) => {
+    const reason = window.prompt(`Reason for flagging ${user.fullName}:`);
+    if (!reason) return;
+    try {
+      await api.post(`/users/${user._id}/flag`, { reason });
+      toast({ title: "User Flagged", description: "Admin review requested." });
+      onRefresh();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to flag user", variant: "destructive" });
+    }
+  };
+
+  const handleToggleStatus = async (user) => {
+    const nextStatus = user.status === "active" ? "inactive" : "active";
+    try {
+      await api.patch(`/users/${user._id}/status`, { status: nextStatus });
+      toast({ title: "Status Updated", description: `${user.fullName} is now ${nextStatus}` });
+      onRefresh();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
     }
   };
 
   const getRoleStyles = (role) => {
     const styles = {
-      student:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-      faculty:
-        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-      admin:
-        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      student: "bg-blue-50 text-blue-700 border-blue-100",
+      faculty: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      admin: "bg-purple-600 text-white border-purple-700",
     };
-    return (
-      styles[role] ||
-      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
-    );
-  };
-
-  const getStatusStyles = (status) => {
-    return status === "active"
-      ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-500"
-      : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-500";
+    return styles[role] || "bg-slate-50 text-slate-700 border-slate-100";
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-8"
-    >
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8">
+      {/* Header & Search */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            User Directory
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Monitor and manage access levels for students and faculty
-          </p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">User Directory</h2>
+          <p className="text-sm text-slate-500 font-medium">Control access and system roles.</p>
         </div>
-        <Button
-          onClick={() => toast({ title: "Note", description: "Use the signup page to add new users for now!" })}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add New User</span>
-        </Button>
+
+        <div className="flex w-full md:w-auto items-center gap-3">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 rounded-xl border-slate-200 focus:ring-indigo-500"
+            />
+          </div>
+          <Button
+            onClick={() => toast({ title: "Note", description: "Use the signup page to add new users!" })}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-10 px-4 shadow-md font-bold flex items-center gap-2 transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Add User</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Main Container */}
-      <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden">
-        <CardContent className="p-6">
+      {/* User List */}
+      <Card className="bg-white border-slate-200/60 rounded-[2.5rem] shadow-xl shadow-slate-200/20 overflow-hidden">
+        <CardContent className="p-4 sm:p-6">
           <div className="space-y-3">
-            {users.map((user, index) => (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="group flex flex-col lg:flex-row items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-indigo-200 dark:hover:border-indigo-500/50 transition-all gap-4"
+            {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+              <div
+                key={user._id}
+                className="group flex flex-col lg:flex-row items-center justify-between p-5 bg-slate-50/40 border border-slate-100 rounded-[1.75rem] hover:bg-white hover:border-indigo-200 hover:shadow-lg transition-all duration-300 gap-4"
               >
-                {/* Profile Info */}
+                {/* Left: Identity */}
                 <div className="flex items-center space-x-4 w-full lg:w-auto">
                   <div className="relative">
-                    <Avatar className="h-14 w-14 border-2 border-white dark:border-slate-700 shadow-sm">
-                      <AvatarImage
-                        src={getAvatarUrl(user)}
-                      />
-                      <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">
+                    <Avatar className={`h-14 w-14 border-2 border-white shadow-sm ${user.status === 'pending' ? 'animate-pulse' : ''}`}>
+                      <AvatarImage src={getAvatarUrl(user)} />
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700 font-black">
                         {user.fullName?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div
-                      className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white dark:border-slate-800 ${user.status === "active"
-                        ? "bg-emerald-500"
-                        : "bg-rose-500"
-                        }`}
-                    />
+                    <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white ${user.status === "active" ? "bg-emerald-500" : user.status === "pending" ? "bg-amber-500" : "bg-rose-500"
+                      }`} />
                   </div>
 
                   <div>
-                    <p className="font-bold text-slate-900 dark:text-white leading-none">
+                    <p className="font-bold text-slate-900 leading-tight flex items-center gap-2">
                       {user.fullName}
+                      {user.flags?.length > 0 && (
+                        <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-bounce">FLAGGED</Badge>
+                      )}
                     </p>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1.5">
-                      <div className="flex items-center text-xs text-slate-500">
-                        <Mail className="h-3 w-3 mr-1" />
-                        {user.email}
-                      </div>
-                      <div className="flex items-center text-xs text-slate-400">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {user.joinDate || "Jan 2026"}
-                      </div>
+                    <div className="flex items-center text-xs text-slate-400 font-medium mt-1">
+                      <Mail className="h-3 w-3 mr-1 text-indigo-400" />
+                      {user.email}
                     </div>
                   </div>
                 </div>
 
-                {/* Badges and Actions */}
-                <div className="flex items-center justify-between w-full lg:w-auto lg:space-x-6 gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      className={`${getRoleStyles(
-                        user.role
-                      )} rounded-lg px-3 py-1 font-bold text-[10px] uppercase tracking-wider border-0`}
-                    >
-                      <ShieldCheck className="h-3 w-3 mr-1" />
-                      {user.role}
-                    </Badge>
-                    <Badge
-                      className={`${getStatusStyles(
-                        user.status
-                      )} rounded-lg px-3 py-1 font-bold text-[10px] uppercase tracking-wider border-0`}
-                    >
-                      <UserCheck className="h-3 w-3 mr-1" />
-                      {user.status}
-                    </Badge>
-                  </div>
+                {/* Right: Actions */}
+                <div className="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
+                  <Badge className={`${getRoleStyles(user.role)} rounded-lg px-3 py-1 font-bold text-[10px] uppercase tracking-wider border shadow-sm`}>
+                    {user.role}
+                  </Badge>
+
+                  <div className="h-8 w-[1px] bg-slate-200 hidden lg:block mx-2" />
 
                   <div className="flex items-center gap-2">
+                    {user.status === "pending" ? (
+                      <Button
+                        size="sm"
+                        onClick={() => handleToggleStatus(user)}
+                        className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4"
+                      >
+                        Approve
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleToggleStatus(user)}
+                        className={`rounded-lg h-9 px-3 text-xs font-bold ${user.status === 'active' ? 'text-slate-500' : 'text-emerald-600 bg-emerald-50'
+                          }`}
+                      >
+                        {user.status === 'active' ? <UserMinus className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
+                        {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </Button>
+                    )}
+
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleRoleToggle(user)}
-                      className="rounded-xl border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 font-bold text-xs"
+                      className="rounded-lg border-slate-200 hover:border-indigo-300 font-bold text-xs h-9 px-3"
                     >
-                      <UserCog className="h-3.5 w-3.5 mr-2" />
+                      <UserCog className="h-4 w-4 mr-2 text-indigo-500" />
                       Role
                     </Button>
+
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDeleteUser(user._id)}
-                      className="rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                      onClick={() => handleFlagUser(user)}
+                      className="rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 h-9 w-9 p-0"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <AlertTriangle className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteUser(user)}
+                      className="rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-9 w-9 p-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            )) : (
+              <div className="py-20 text-center">
+                <div className="bg-slate-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="text-slate-300 h-8 w-8" />
+                </div>
+                <p className="text-slate-500 font-bold">No users found matching your search.</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Footer System Info */}
-      <div className="flex items-center justify-center py-4 opacity-50">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-          User Database v2.1.0 • All connections encrypted
-        </p>
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-slate-100/50 p-4 rounded-2xl border border-slate-200/60 text-center">
+          <p className="text-[10px] font-black text-slate-400 uppercase">Total Users</p>
+          <p className="text-xl font-black text-slate-900">{users.length}</p>
+        </div>
+        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
+          <p className="text-[10px] font-black text-emerald-500 uppercase">Active</p>
+          <p className="text-xl font-black text-emerald-700">{users.filter(u => u.status === 'active').length}</p>
+        </div>
+        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-center">
+          <p className="text-[10px] font-black text-amber-500 uppercase">Pending</p>
+          <p className="text-xl font-black text-amber-700">{users.filter(u => u.status === 'pending').length}</p>
+        </div>
+        <div className="bg-rose-50 p-4 rounded-2xl border border-rose-100 text-center">
+          <p className="text-[10px] font-black text-rose-500 uppercase">Flagged</p>
+          <p className="text-xl font-black text-rose-700">{users.filter(u => u.flags?.length > 0).length}</p>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

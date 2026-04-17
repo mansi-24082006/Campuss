@@ -13,6 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,6 +27,7 @@ import { roleData } from "@/lib/roles.js";
 import api from "@/lib/axios";
 import AnimatedSwitch from "@/components/ui/AnimatedSwitch";
 import { Check } from "lucide-react";
+import { DEPARTMENTS } from "@/lib/departments";
 
 const SignupPage = () => {
   const [fullName, setFullName] = useState("");
@@ -212,14 +220,19 @@ const SignupPage = () => {
 
                   {/* Department */}
                   <div className="relative group">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                    <Input
-                      type="text"
-                      placeholder="Department (e.g. CSE, EEE)"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      className="pl-12 h-13 rounded-2xl border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-all dark:text-white"
-                    />
+                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors z-10" />
+                    <Select value={department} onValueChange={setDepartment}>
+                      <SelectTrigger className="pl-12 h-13 rounded-2xl border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm transition-all dark:text-white font-medium">
+                        <SelectValue placeholder="Department" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-2xl">
+                        {DEPARTMENTS.map((dept) => (
+                          <SelectItem key={dept} value={dept} className="rounded-xl py-3 font-medium">
+                            {dept}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Phone */}

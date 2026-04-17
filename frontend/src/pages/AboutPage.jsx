@@ -1,6 +1,5 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Users, Zap, Target } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,102 +33,83 @@ const AboutPage = () => {
         <meta name="description" content="Learn about the mission, vision, and the team behind CampusBuzz, the ultimate college event aggregator." />
       </Helmet>
 
-      <div className="bg-white dark:bg-slate-950 py-16 px-4 transition-colors duration-300">
+      <div className="bg-transparent py-20 px-4 transition-colors duration-300 min-h-screen">
         {/* Hero Section */}
-        <div className="max-w-7xl mx-auto text-center mb-20">
-          <motion.h1
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-5xl md:text-6xl font-bold mb-4 gradient-text"
-          >
-            Connecting Every Corner of Campus Life
-          </motion.h1>
+        <div className="max-w-7xl mx-auto text-center mb-24">
+          <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight leading-tight">
+            Connecting Every Corner of <span className="text-indigo-600">Campus Life</span>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto"
-          >
-            CampusBuzz was born from a simple idea: to create a single, dynamic hub for all college events.
-          </motion.p>
+          <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
+            CampusBuzz was born from a simple idea: to create a single, dynamic hub for all college events, empowering communities through technology.
+          </p>
         </div>
 
         {/* Mission & Vision */}
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 mb-20">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Card className="h-full glass-effect border-0 p-6 text-center">
-              <Zap className="h-12 w-12 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Our Mission</h2>
-              <p className="text-slate-700 dark:text-slate-300 text-lg">
-                To empower students, faculty, and administrators by providing an intuitive platform.
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 mb-32">
+          <div>
+            <Card className="h-full bg-white border-slate-200/60 p-10 text-center rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-500">
+              <div className="p-5 bg-indigo-50 rounded-3xl w-fit mx-auto mb-6 border border-indigo-100">
+                <Zap className="h-8 w-8 text-indigo-600" />
+              </div>
+              <h2 className="text-3xl font-black mb-4 text-slate-900 tracking-tight">Our Mission</h2>
+              <p className="text-slate-500 font-medium text-lg leading-relaxed">
+                To empower students, faculty, and administrators by providing an intuitive platform for seamless event discovery and participation.
               </p>
             </Card>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Card className="h-full glass-effect border-0 p-6 text-center">
-              <Target className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Our Vision</h2>
-              <p className="text-slate-700 dark:text-slate-300 text-lg">
-                To be the essential digital companion for every college campus.
+          <div>
+            <Card className="h-full bg-white border-slate-200/60 p-10 text-center rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-500">
+              <div className="p-5 bg-violet-50 rounded-3xl w-fit mx-auto mb-6 border border-violet-100">
+                <Target className="h-8 w-8 text-violet-600" />
+              </div>
+              <h2 className="text-3xl font-black mb-4 text-slate-900 tracking-tight">Our Vision</h2>
+              <p className="text-slate-500 font-medium text-lg leading-relaxed">
+                To be the essential digital companion for every college campus, fostering a vibrant and engaged student community globally.
               </p>
             </Card>
-          </motion.div>
+          </div>
         </div>
 
         {/* Team Section */}
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
+          <div className="text-center mb-20">
+            <div className="p-4 bg-emerald-50 rounded-3xl w-fit mx-auto mb-6 border border-emerald-100">
+              <Users className="h-10 w-10 text-emerald-600" />
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black mb-4 text-slate-900 tracking-tight">
               Meet the Team
             </h2>
-            <p className="text-xl text-slate-600 dark:text-slate-400">
+            <p className="text-xl text-slate-500 font-medium">
               The passionate minds driving CampusBuzz forward.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {teamMembers.map((member, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="card-hover glass-effect border-0 text-center p-6">
-                  <Avatar className="w-32 h-32 mx-auto mb-5 border-2 border-purple-200">
-                    <AvatarImage src={member.image} alt={member.name} />
-                    <AvatarFallback>{member.name.slice(0, 2)}</AvatarFallback>
-                  </Avatar>
+              <div key={index}>
+                <Card className="bg-white border-slate-200/60 text-center p-10 rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 group overflow-hidden">
+                  <div className="relative mb-8">
+                    <div className="absolute inset-0 bg-indigo-600/5 rounded-full scale-110 blur-xl group-hover:scale-125 transition-transform duration-500" />
+                    <Avatar className="w-40 h-40 mx-auto relative border-4 border-white shadow-xl">
+                      <AvatarImage src={member.image} alt={member.name} className="object-cover" />
+                      <AvatarFallback className="bg-indigo-50 text-indigo-600 font-black text-3xl">{member.name.slice(0, 2)}</AvatarFallback>
+                    </Avatar>
+                  </div>
 
                   <CardHeader className="p-0">
-                    <CardTitle className="text-2xl text-slate-900 dark:text-white">{member.name}</CardTitle>
-                    <CardDescription className="text-purple-600 dark:text-purple-400 font-semibold">{member.role}</CardDescription>
+                    <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">{member.name}</CardTitle>
+                    <CardDescription className="text-indigo-600 font-black uppercase text-xs tracking-[0.2em] mt-2 bg-indigo-50 inline-block px-4 py-1.5 rounded-full">
+                      {member.role}
+                    </CardDescription>
                   </CardHeader>
 
-                  <CardContent className="p-0 mt-4">
-                    <p className="text-slate-600 dark:text-slate-400">{member.bio}</p>
+                  <CardContent className="p-0 mt-6">
+                    <p className="text-slate-500 font-medium leading-relaxed">{member.bio}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

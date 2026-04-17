@@ -137,8 +137,8 @@ const StudentList = ({ events }) => {
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Attendance Desk</h2>
-          <p className="text-sm text-slate-500">Manage students and verify certificates</p>
+          <h2 className="text-lg font-black text-slate-900 leading-tight">Attendance Desk</h2>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Manage students and verify certificates</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
           <div className="relative w-full md:w-64">
@@ -226,7 +226,7 @@ const StudentList = ({ events }) => {
         <Card className="bg-white border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm">
           <CardContent className="p-8 space-y-4">
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-              <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-lg">
+              <div className="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-black text-base">
                 {eventData?.registeredStudents?.length || 0}
               </div>
               <div>
@@ -256,7 +256,7 @@ const StudentList = ({ events }) => {
                         <AvatarFallback className="bg-indigo-600 text-white font-bold">{student.fullName?.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-bold text-sm text-slate-800 tracking-tight">{student.fullName}</p>
+                        <p className="font-bold text-xs text-slate-800 tracking-tight">{student.fullName}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{student.department || "General"}</p>
                           <span className="text-slate-300">•</span>
@@ -332,12 +332,12 @@ const StudentList = ({ events }) => {
             </div>
             <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider text-center sm:text-left">
-                💡 Winners receive extra points & badges upon saving.
+                Winners receive extra points and badges upon saving.
               </p>
               <Button
                 onClick={handleSaveWinners}
                 disabled={saveLoading || winners.length === 0}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl px-12 py-6 text-sm shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02]"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl px-12 py-5 text-xs shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02]"
               >
                 {saveLoading ? "Saving..." : "Save Leaderboard"}
               </Button>

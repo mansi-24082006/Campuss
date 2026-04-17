@@ -1,6 +1,5 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Calendar, Users, Trophy, BookOpen, Zap, Star, ShieldCheck, BarChart2, MessageSquare } from 'lucide-react';
 
@@ -49,47 +48,36 @@ const FeaturesPage = () => {
         <title>Features - CampusBuzz</title>
         <meta name="description" content="Explore the powerful features of CampusBuzz, designed to enhance the college event experience for everyone." />
       </Helmet>
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-16 px-4 min-h-screen">
+      <div className="bg-transparent py-20 px-4 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text">
-              Platform Features
+          <div className="text-center mb-20">
+            <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight">
+              Platform <span className="text-indigo-600">Features</span>
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
               Everything you need to revolutionize the campus event experience, all in one place.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {featureList.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="card-hover glass-effect border-0 h-full shadow-lg">
-                  <CardHeader className="items-center text-center">
-                    <div className="p-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full w-fit mb-4">
-                      <feature.icon className="h-8 w-8 text-white" />
+              <div key={index}>
+                <Card className="bg-white border-slate-200/60 h-full shadow-xl shadow-slate-200/20 rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 hover:-translate-y-2 group">
+                  <CardHeader className="items-center text-center p-8 pb-4">
+                    <div className="p-5 bg-indigo-50 border border-indigo-100 rounded-3xl w-fit mb-6 group-hover:scale-110 transition-transform duration-500">
+                      <feature.icon className="h-10 w-10 text-indigo-600" />
                     </div>
-                    <CardTitle className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+                    <CardTitle className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-slate-600 dark:text-slate-400 text-center text-base">
+                  <CardContent className="px-8 pb-10">
+                    <CardDescription className="text-slate-500 text-center text-base font-medium leading-relaxed">
                       {feature.description}
                     </CardDescription>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

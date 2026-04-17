@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Notification from "../models/Notification.js";
 
 // @desc    Get user notifications
@@ -5,7 +6,7 @@ import Notification from "../models/Notification.js";
 // @access  Private
 export const getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ recipient: req.user._id })
+    const notifications = await Notification.find({ recipient: req.user.id })
       .sort({ createdAt: -1 })
       .limit(50);
     res.json(notifications);
@@ -23,7 +24,7 @@ export const markAsRead = async (req, res) => {
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
     }
-    if (notification.recipient.toString() !== req.user._id.toString()) {
+    if (notification.recipient.toString() !== req.user.id.toString()) {
       return res.status(401).json({ message: "Not authorized" });
     }
 
@@ -41,7 +42,7 @@ export const markAsRead = async (req, res) => {
 export const markAllAsRead = async (req, res) => {
   try {
     await Notification.updateMany(
-      { recipient: req.user._id, read: false },
+      { recipient: req.user.id, read: false },
       { $set: { read: true } }
     );
     res.json({ message: "All notifications marked as read" });
@@ -68,17 +69,17 @@ export const broadcastNotification = async (req, res) => {
     const { eventId } = req.params;
     const { message, type } = req.body;
     
-    // We need Event model here
+    // Populating registered students to get their names and emails
     const Event = (await import("../models/Event.js")).default;
-    const event = await Event.findById(eventId);
+    const event = await Event.findById(eventId).populate("registeredStudents", "fullName email");
     
     if (!event) return res.status(404).json({ message: "Event not found" });
 
-    const studentIds = event.registeredStudents || [];
+    const students = event.registeredStudents || [];
     
-    // Create notifications in bulk for efficiency
-    const notifications = studentIds.map(studentId => ({
-      recipient: studentId,
+    // 1. Create Dashboard Notifications in Bulk
+    const notifications = students.map(student => ({
+      recipient: student._id,
       sender: req.user.id,
       message: `[Event Update: ${event.title}] ${message}`,
       type: type || "info",
@@ -89,7 +90,21 @@ export const broadcastNotification = async (req, res) => {
       await Notification.insertMany(notifications);
     }
 
-    res.json({ message: `Announcement broadcasted to ${notifications.length} students.` });
+    // 2. Send Emails in Background (Don't await whole loop to respond faster)
+    // We import email utilities here to avoid circular dependencies if any
+    const { sendEmail, getAnnouncementTemplate } = await import("../utils/emailService.js");
+    
+    students.forEach(student => {
+      if (student.email) {
+        sendEmail({
+          to: student.email,
+          subject: `📢 ${event.title}: New Announcement 🚀`,
+          html: getAnnouncementTemplate(student.fullName, event, message, type)
+        });
+      }
+    });
+
+    res.json({ message: `Announcement broadcasted to ${students.length} students via Dashboard and Email.` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,10 +115,113 @@ export const broadcastNotification = async (req, res) => {
 // @access  Private (Faculty/Admin)
 export const getSentNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ sender: req.user.id })
-      .sort({ createdAt: -1 })
-      .limit(20);
-    res.json(notifications);
+    // Group by message content to avoid showing duplicate broadcast entries
+    const announcements = await Notification.aggregate([
+      { $match: { sender: new mongoose.Types.ObjectId(req.user.id) } },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$message",
+          message: { $first: "$message" },
+          createdAt: { $first: "$createdAt" },
+          type: { $first: "$type" },
+          originalId: { $first: "$_id" }
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 20 }
+    ]);
+    
+    // Map to a consistent format
+    res.json(announcements.map(a => ({ ...a, _id: a.originalId })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Global Broadcast to ALL students
+// @route   POST /api/notifications/global-broadcast
+// @access  Private (Admin Only)
+export const globalBroadcast = async (req, res) => {
+  try {
+    const { message, type } = req.body;
+    if (!message) return res.status(400).json({ message: "Message is required" });
+
+    const User = (await import("../models/User.js")).default;
+    const students = await User.find({ role: "student" }).select("_id email fullName");
+
+    const notifications = students.map(student => ({
+      recipient: student._id,
+      sender: req.user.id,
+      message: `📢 GLOBAL: ${message}`,
+      type: type || "warning",
+      link: "/dashboard"
+    }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    res.json({ message: `Message broadcasted to ${students.length} users.` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Faculty Broadcast to all students in their events
+// @route   POST /api/notifications/faculty-broadcast
+// @access  Private (Faculty Only)
+export const facultyBroadcast = async (req, res) => {
+  try {
+    const { message, type } = req.body;
+    if (!message) return res.status(400).json({ message: "Message is required" });
+
+    const Event = (await import("../models/Event.js")).default;
+    const User = (await import("../models/User.js")).default;
+
+    const myEvents = await Event.find({
+      $or: [{ organizer: req.user.id }, { assignedFaculty: req.user.id }]
+    }).select("registeredStudents title date venue");
+
+    // Flatten to unique student IDs
+    const studentIds = [...new Set(myEvents.flatMap(e => e.registeredStudents.map(s => s.toString())))];
+
+    if (studentIds.length === 0) {
+      return res.json({ message: "No students currently registered for your events." });
+    }
+
+    // Fetch student details for email sending
+    const students = await User.find({ _id: { $in: studentIds } }).select("fullName email");
+
+    const notifications = students.map(student => ({
+      recipient: student._id,
+      sender: req.user.id,
+      message: `📢 FROM FACULTY: ${message}`,
+      type: type || "info",
+      link: "/dashboard"
+    }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    // Send Emails in Background
+    const { sendEmail, getAnnouncementTemplate } = await import("../utils/emailService.js");
+    
+    // We use a generic event object for the template since this is from a faculty generally
+    const genericEvent = { title: "Faculty Updates", date: new Date(), venue: "Campus" };
+
+    students.forEach(student => {
+      if (student.email) {
+        sendEmail({
+          to: student.email,
+          subject: `📢 Faculty Update: New Announcement 🚀`,
+          html: getAnnouncementTemplate(student.fullName, genericEvent, message, type)
+        });
+      }
+    });
+
+    res.json({ message: `Message broadcasted to ${students.length} students via Dashboard and Email.` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

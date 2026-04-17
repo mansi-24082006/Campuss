@@ -49,10 +49,10 @@ const NotificationCenter = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
-          <Bell className="text-white" size={20} />
+        <button className="relative p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60 hover:bg-white hover:border-indigo-200 transition-all group active:scale-95">
+          <Bell className="text-slate-500 group-hover:text-indigo-600 transition-colors" size={20} />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-slate-900 animate-pulse">
+            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-indigo-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg shadow-indigo-600/20 animate-in fade-in zoom-in duration-300">
               {unreadCount}
             </span>
           )}

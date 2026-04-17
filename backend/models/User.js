@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     fullName: String,
     collegeName: String,
+    state: { type: String, default: "Gujarat" }, // Default state for this region
     department: String,
     departmentInterests: [String],
     phoneNumber: String,
@@ -17,7 +18,7 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "inactive"],
+      enum: ["active", "inactive", "pending"],
       default: "active",
     },
     points: {
@@ -43,6 +44,13 @@ const userSchema = new mongoose.Schema(
       national: { type: Number, default: 0 },
     },
     badges: [String],
+    flags: [
+      {
+        reason: String,
+        flaggedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        date: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true },
 );

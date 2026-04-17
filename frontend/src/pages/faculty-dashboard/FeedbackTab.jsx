@@ -31,8 +31,21 @@ const FeedbackTab = ({ events }) => {
     if (!id) return;
     setLoading(true);
     try {
-      const res = await api.get(`/events/${id}/feedback`);
-      setFeedback(res.data || []);
+      if (id === "general") {
+        const res = await api.get("/feedback");
+        // Map general feedback to match the event feedback structure
+        const mappedData = res.data.map(f => ({
+          studentName: f.studentId?.fullName || "Anonymous",
+          rating: null, // General feedback doesn't have a star rating
+          comment: f.message,
+          createdAt: f.createdAt,
+          isGeneral: true
+        }));
+        setFeedback(mappedData);
+      } else {
+        const res = await api.get(`/events/${id}/feedback`);
+        setFeedback(res.data || []);
+      }
     } catch (err) {
       console.error("Failed to fetch feedback:", err);
       setFeedback([]);
@@ -45,13 +58,14 @@ const FeedbackTab = ({ events }) => {
     if (selectedEventId) fetchFeedback(selectedEventId);
   }, [selectedEventId]);
 
-  const avgRating = feedback.length
-    ? (feedback.reduce((s, f) => s + f.rating, 0) / feedback.length).toFixed(1)
+  const feedbackWithRating = feedback.filter(f => f.rating !== null);
+  const avgRating = feedbackWithRating.length
+    ? (feedbackWithRating.reduce((s, f) => s + f.rating, 0) / feedbackWithRating.length).toFixed(1)
     : null;
 
   const ratingDist = [5, 4, 3, 2, 1].map((r) => ({
     rating: r,
-    count: feedback.filter((f) => f.rating === r).length,
+    count: feedbackWithRating.filter((f) => f.rating === r).length,
   }));
 
   return (
@@ -71,6 +85,10 @@ const FeedbackTab = ({ events }) => {
             <SelectValue placeholder="Select an Event" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="general" className="font-bold text-indigo-600">
+              🌐 General Platform Feedback
+            </SelectItem>
+            <div className="h-px bg-slate-100 my-1" />
             {events.map((e) => (
               <SelectItem key={e._id} value={e._id}>{e.title}</SelectItem>
             ))}
@@ -118,7 +136,7 @@ const FeedbackTab = ({ events }) => {
               <div className="space-y-1.5">
                 {ratingDist.map(({ rating, count }) => (
                   <div key={rating} className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 w-4">{rating}★</span>
+                    <span className="text-[10px] font-bold text-slate-500 w-8">{rating} Stars</span>
                     <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-400 rounded-full transition-all duration-700"
@@ -150,7 +168,7 @@ const FeedbackTab = ({ events }) => {
                     </div>
                     <span className="text-sm font-bold text-slate-800">{fb.studentName || "Anonymous"}</span>
                   </div>
-                  <StarDisplay rating={fb.rating} />
+                  {fb.rating !== null && <StarDisplay rating={fb.rating} />}
                 </div>
                 {fb.comment && (
                   <p className="text-sm text-slate-600 leading-relaxed pl-10">{fb.comment}</p>
@@ -158,6 +176,7 @@ const FeedbackTab = ({ events }) => {
                 {fb.createdAt && (
                   <p className="text-[11px] text-slate-400 pl-10">
                     {new Date(fb.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}
+                    {fb.isGeneral && <span className="ml-2 text-indigo-400 font-bold uppercase tracking-tighter ring-1 ring-indigo-100 px-1.5 rounded">Platform Suggestion</span>}
                   </p>
                 )}
               </motion.div>

@@ -1,213 +1,229 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Edit, Plus, LayoutGrid, List, MapPin, Calendar as CalendarIcon } from "lucide-react";
+import {
+  Edit,
+  LayoutGrid,
+  List,
+  Trash2,
+  Plus,
+  Users,
+  Calendar,
+} from "lucide-react";
 
 const MyEvents = ({ events, handleEditEvent }) => {
-  const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
+  const [viewMode, setViewMode] = useState("list");
 
   const getStatusColor = (status) => {
     const colors = {
-      approved: "bg-green-100 text-green-800",
-      pending: "bg-orange-100 text-orange-800",
-      rejected: "bg-red-100 text-red-800",
-      completed: "bg-gray-100 text-gray-800",
-      active: "bg-green-100 text-green-800",
-      upcoming: "bg-blue-100 text-blue-800",
+      approved: "bg-emerald-100 text-emerald-700",
+      active: "bg-blue-100 text-blue-700",
+      pending: "bg-orange-100 text-orange-700",
+      rejected: "bg-rose-100 text-rose-700",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status?.toLowerCase()] || "bg-gray-100 text-gray-600";
   };
 
+  if (events.length === 0) {
+    return (
+      <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed">
+        <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold">No Events Yet</h3>
+        <p className="text-xs text-gray-500 mt-2">
+          Start by creating your first event 🚀
+        </p>
+
+        <Button
+          onClick={() => handleEditEvent(null)}
+          className="mt-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5 py-2 text-xs"
+        >
+          <Plus size={16} className="mr-2" />
+          Create Event
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="space-y-8">
+
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-            Event Management
+          <h2 className="text-xl font-bold text-slate-900">
+            My Events
           </h2>
-          <p className="text-slate-500 text-sm">
-            Organize and monitor your campus activities
+          <p className="text-xs text-slate-500 mt-1">
+            {events.length} events total
           </p>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Toggle Switch */}
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+
+          {/* Toggle */}
+          <div className="flex bg-slate-100 p-1 rounded-xl border">
             <Button
-              variant={viewMode === "grid" ? "white" : "ghost"}
-              size="sm"
+              variant="ghost"
               onClick={() => setViewMode("grid")}
-              className={`h-8 w-10 p-0 rounded-lg transition-all ${viewMode === "grid" ? "bg-white shadow-sm" : "text-slate-500"
+              className={`h-9 w-10 ${viewMode === "grid" ? "bg-white shadow-sm" : "text-slate-500"
                 }`}
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
+
             <Button
-              variant={viewMode === "list" ? "white" : "ghost"}
-              size="sm"
+              variant="ghost"
               onClick={() => setViewMode("list")}
-              className={`h-8 w-10 p-0 rounded-lg transition-all ${viewMode === "list" ? "bg-white shadow-sm" : "text-slate-500"
+              className={`h-9 w-10 ${viewMode === "list" ? "bg-white shadow-sm" : "text-slate-500"
                 }`}
             >
               <List className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Create */}
+          <Button
+            onClick={() => handleEditEvent(null)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5 py-2 text-xs"
+          >
+            <Plus size={16} className="mr-2" />
+            Create
+          </Button>
         </div>
       </div>
 
-      {/* Content Section */}
-      <AnimatePresence mode="wait">
+      {/* EVENTS */}
+      <AnimatePresence mode="popLayout">
         <motion.div
-          key={viewMode}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
+          layout
           className={
             viewMode === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "flex flex-col gap-3"
+              ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
+              : "space-y-4"
           }
         >
           {events.map((event, index) => (
             <motion.div
               key={event._id}
               layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.05 }}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.2, delay: index * 0.03 }}
             >
               {viewMode === "grid" ? (
-                /* Grid Card (Column Wise) */
-                <Card className="group bg-white border border-slate-200 rounded-[2rem] overflow-hidden hover:shadow-xl hover:border-indigo-100 transition-all h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex flex-col gap-1">
-                        <Badge
-                          className={`${getStatusColor(
-                            event.status
-                          )} rounded-lg border-0 px-3 py-1 font-bold text-[10px] uppercase tracking-wider w-fit`}
-                        >
-                          {event.status}
-                        </Badge>
-                        {event.status === "pending" && (
-                          <span className="text-[9px] text-orange-600 font-bold animate-pulse">
-                            Awaiting Admin Approval
-                          </span>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditEvent(event._id)}
-                        className="h-8 w-8 rounded-full"
-                      >
-                        <Edit className="h-4 w-4 text-slate-400" />
-                      </Button>
-                    </div>
-                    <CardTitle className="text-xl font-bold text-slate-800">
-                      {event.title}
-                    </CardTitle>
-                    <CardDescription className="font-medium text-indigo-600">
+                /* GRID */
+                <div className="bg-white border rounded-2xl p-5 hover:shadow-md transition">
+
+                  <div className="flex justify-between mb-4">
+                    <Badge className={`${getStatusColor(event.status)} text-[10px] px-3 py-1 capitalize`}>
+                      {event.status}
+                    </Badge>
+
+                    <Button 
+                      size="icon" 
+                      variant="ghost"
+                      onClick={() => handleEditEvent(event)}
+                      className="hover:text-indigo-600"
+                    >
+                      <Edit size={16} />
+                    </Button>
+                  </div>
+
+                  <h3 className="text-base font-semibold text-slate-800">
+                    {event.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-500 mt-2">
+                    {event.category} • {event.venue}
+                  </p>
+
+                  <div className="mt-5 space-y-2 text-xs text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} />
                       {new Date(event.date).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3 mt-4">
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <MapPin className="h-3.5 w-3.5" />
-                        <span className="text-[11px] font-semibold truncate">{event.venue || "TBD"}</span>
-                      </div>
-                      <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl group-hover:bg-indigo-50/50 transition-colors">
-                        <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-indigo-500" />
-                          <span className="text-xs font-bold text-slate-600">
-                            {event.registeredStudents?.length || 0} Registered
-                          </span>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] border-indigo-100 text-indigo-600 bg-white font-black"
-                        >
-                          {event.category}
-                        </Badge>
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="flex items-center gap-2">
+                      <Users size={14} />
+                      {event.registeredStudents?.length || 0} students
+                    </div>
+                  </div>
+                </div>
               ) : (
-                /* List Row (Row Wise) */
-                <div className="group flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl hover:border-indigo-200 hover:shadow-md transition-all">
-                  <div className="flex items-center gap-6 flex-1">
-                    <div className="hidden xs:flex h-12 w-12 bg-indigo-50 text-indigo-600 rounded-xl items-center justify-center font-black">
+                /* LIST */
+                <div className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-white border rounded-2xl hover:shadow-md transition gap-4">
+
+                  {/* LEFT */}
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
                       {event.title.charAt(0)}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1 flex-1">
-                      <div>
-                        <h3 className="font-bold text-slate-800 truncate">
+
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-semibold text-slate-800">
                           {event.title}
                         </h3>
-                        <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tighter">
-                          Event Title
-                        </p>
-                      </div>
-                      <div className="hidden sm:block">
-                        <p className="text-sm font-semibold text-slate-600">
-                          {new Date(event.date).toLocaleDateString()}
-                        </p>
-                        <p className="text-[11px] text-slate-400 uppercase font-bold tracking-tighter">
-                          Schedule
-                        </p>
-                      </div>
-                      <div className="hidden lg:flex items-center gap-2">
-                        <Badge
-                          className={`${getStatusColor(
-                            event.status
-                          )} rounded-md border-0`}
-                        >
+
+                        <Badge className={`${getStatusColor(event.status)} text-[10px] px-3 py-1 capitalize`}>
                           {event.status}
                         </Badge>
-                        <Badge
-                          variant="outline"
-                          className="text-slate-400 border-slate-200"
-                        >
-                          {event.category}
-                        </Badge>
                       </div>
+
+                      <p className="text-xs text-slate-500 mt-1">
+                        {event.category} • {event.venue}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 ml-4">
-                    <div className="hidden md:flex flex-col items-end">
-                      <span className="text-sm font-black text-slate-800">
-                        {event.registeredStudents?.length || 0}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
-                        Joined
-                      </span>
+                  {/* RIGHT */}
+                  <div className="flex items-center gap-6">
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {new Date(event.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-[10px] text-gray-400">DATE</p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditEvent(event._id)}
-                      className="rounded-xl border-slate-200 hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <Edit className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </Button>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {event.registeredStudents?.length || 0}
+                      </p>
+                      <p className="text-[10px] text-gray-400">ENROLLED</p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button 
+                        size="icon" 
+                        variant="ghost"
+                        onClick={() => handleEditEvent(event)}
+                        className="hover:text-indigo-600"
+                      >
+                        <Edit size={16} />
+                      </Button>
+
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-gray-500 hover:text-red-500"
+                        onClick={async () => {
+                          if (window.confirm("Permanently delete this event?")) {
+                            try {
+                              await api.delete(`/events/${event._id}`);
+                              window.location.reload(); // Simple refresh for now
+                            } catch (e) {
+                              console.error("Delete failed");
+                            }
+                          }
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -215,15 +231,7 @@ const MyEvents = ({ events, handleEditEvent }) => {
           ))}
         </motion.div>
       </AnimatePresence>
-
-      {events.length === 0 && (
-        <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-          <p className="text-slate-400 font-medium">
-            No events assigned to you yet. Admin will notify you when an event is assigned.
-          </p>
-        </div>
-      )}
-    </motion.div>
+    </div>
   );
 };
 

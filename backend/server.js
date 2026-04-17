@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
@@ -9,12 +11,15 @@ import userRoutes from "./routes/userRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 
 import notificationRoutes from "./routes/notificationRoutes.js";
-import aiRoutes from "./routes/aiRoutes.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
 import cron from "node-cron";
 import Event from "./models/Event.js";
 import User from "./models/User.js";
 import { sendEmail, getReminderTemplate } from "./utils/emailService.js";
 import Notification from "./models/Notification.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -77,6 +82,9 @@ app.use(
 
 app.use(express.json());
 
+// Serve static files from uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Health check
 app.get("/", (req, res) => res.send("CampusBuzz API is running..."));
 
@@ -86,7 +94,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/ai", aiRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Start Server
 app.listen(PORT, () => {

@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Calendar, Clock, MapPin, Users, ArrowLeft, ExternalLink, Sparkles, Award, ShieldCheck, X } from 'lucide-react';
 import { getAvatarUrl } from "@/lib/avatar";
 import api from "@/lib/axios";
+import { getEventImageUrl } from "@/lib/utils";
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -43,7 +44,7 @@ const EventDetails = () => {
     try {
       const res = await api.post(`/events/${id}/register`);
       toast({
-        title: res.data?.waitlisted ? "Added to Waitlist! 📋" : "Registration Successful! 🎉",
+        title: res.data?.waitlisted ? "Added to Waitlist!" : "Registration Successful!",
         description: res.data?.waitlisted 
           ? `You're on the waitlist for ${event?.title}`
           : `You've been successfully registered for ${event?.title}`,
@@ -115,7 +116,7 @@ const EventDetails = () => {
           <img
             alt={event.title}
             className="w-full h-full object-cover opacity-60"
-            src="https://images.unsplash.com/photo-1540575861501-7ad05823c9f5?auto=format&fit=crop&q=80&w=2070" 
+            src={getEventImageUrl(event.image, event.category)} 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent" />
           

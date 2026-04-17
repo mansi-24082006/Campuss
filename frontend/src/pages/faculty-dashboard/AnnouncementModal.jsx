@@ -12,7 +12,7 @@ import {
 import api from "@/lib/axios";
 import { useToast } from "@/components/ui/use-toast";
 
-const AnnouncementModal = ({ isOpen, onClose, events = [] }) => {
+const AnnouncementModal = ({ isOpen, onClose, events = [], onSuccess }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,13 +31,21 @@ const AnnouncementModal = ({ isOpen, onClose, events = [] }) => {
 
     setLoading(true);
     try {
-      await api.post(`/notifications/broadcast/${formData.eventId}`, {
-        message: formData.message,
-        type: formData.type
-      });
+      if (formData.eventId === "all_my_students") {
+        await api.post("/notifications/faculty-broadcast", {
+          message: formData.message,
+          type: formData.type
+        });
+      } else {
+        await api.post(`/notifications/broadcast/${formData.eventId}`, {
+          message: formData.message,
+          type: formData.type
+        });
+      }
 
-      toast({ title: "Sent! 📢", description: "Announcement sent to all registered students." });
+      toast({ title: "Sent!", description: "Announcement sent successfully." });
       setFormData({ eventId: "", message: "", type: "info" });
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       toast({ 
@@ -58,25 +66,26 @@ const AnnouncementModal = ({ isOpen, onClose, events = [] }) => {
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
       >
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-              <Megaphone size={20} />
+        <div className="px-8 py-10 border-b border-slate-50 flex justify-between items-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="w-14 h-14 rounded-[1.25rem] bg-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-200 rotate-[-5deg] group-hover:rotate-0 transition-transform">
+              <Megaphone size={28} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Push Announcement</h2>
-              <p className="text-xs text-slate-500 font-medium tracking-tight">Send updates to all participants</p>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Push Announcement</h2>
+              <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-2 opacity-60">Broadcast to {events.length || 0} Events</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-            <X size={20} />
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100 h-10 w-10">
+            <X size={24} className="text-slate-300" />
           </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <Target size={12} /> Target Event
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2 mb-1">
+              <Target size={14} className="text-indigo-500" /> Target Event
             </label>
             <Select 
               value={formData.eventId} 
@@ -86,17 +95,21 @@ const AnnouncementModal = ({ isOpen, onClose, events = [] }) => {
                 <SelectValue placeholder="Select event to notify students" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all_my_students" className="font-bold text-indigo-600 italic">
+                  🚀 All My Students (System-wide)
+                </SelectItem>
+                <div className="h-px bg-slate-100 my-1" />
                 {events.map((e) => (
                   <SelectItem key={e._id} value={e._id}>{e.title}</SelectItem>
                 ))}
-                {events.length === 0 && <SelectItem value="none" disabled>No events available</SelectItem>}
+                {events.length === 0 && <SelectItem value="none" disabled>No active events</SelectItem>}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <Users size={12} /> Announcement Type
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2 mb-1">
+              <Users size={14} className="text-indigo-500" /> Announcement Type
             </label>
             <div className="grid grid-cols-3 gap-2">
               {["info", "success", "warning"].map((t) => (
@@ -104,9 +117,9 @@ const AnnouncementModal = ({ isOpen, onClose, events = [] }) => {
                   key={t}
                   type="button"
                   onClick={() => setFormData({ ...formData, type: t })}
-                  className={`py-2 text-[10px] font-bold uppercase rounded-lg border-2 transition-all ${
+                  className={`py-3 text-[11px] font-black uppercase rounded-xl border-2 transition-all flex items-center justify-center ${
                     formData.type === t 
-                    ? "bg-indigo-50 border-indigo-500 text-indigo-700" 
+                    ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100 scale-[1.02]" 
                     : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
                   }`}
                 >
@@ -117,11 +130,11 @@ const AnnouncementModal = ({ isOpen, onClose, events = [] }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2 mb-1">
               Message Content
             </label>
             <textarea
-              className="w-full min-h-[120px] rounded-2xl border-slate-200 p-4 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none bg-slate-50/50"
+              className="w-full min-h-[140px] rounded-[1.5rem] border-2 border-slate-100 p-5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none bg-slate-50/30 text-slate-700 font-medium placeholder:text-slate-300"
               placeholder="e.g. 'Event starts in 10 minutes at the Main Audi! Bring your IDs.'"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}

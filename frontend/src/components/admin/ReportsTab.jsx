@@ -10,12 +10,20 @@ import {
   Calendar,
   ArrowUpDown,
   MessageSquare,
+  MapPin,
+  ShieldAlert,
 } from "lucide-react";
 import api from "@/lib/axios";
 import FeedbackViewerModal from "./FeedbackViewerModal";
 
 const ReportsTab = () => {
-  const [data, setData] = useState({ topEvents: [], topStudents: [] });
+  const [data, setData] = useState({ 
+    topEvents: [], 
+    topStudents: [], 
+    stateStats: [], 
+    collegeStats: [], 
+    flaggedUsers: [] 
+  });
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState("registered");
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -248,13 +256,15 @@ const ReportsTab = () => {
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Trophy size={20} className="text-amber-500" />
-            <h3 className="font-bold text-slate-900">Top 10 Students by Points</h3>
+            <h3 className="font-bold text-slate-900">National Leaderboard</h3>
           </div>
           <button
-            onClick={exportStudentsCSV}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-colors"
+            onClick={() => {
+              api.post("/users/recalculate-ranks").then(() => fetchReports());
+            }}
+            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
           >
-            <Download size={13} /> Export CSV
+            ⚡ Recalculate Ranks
           </button>
         </div>
 
@@ -277,24 +287,104 @@ const ReportsTab = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-800 text-sm line-clamp-1">{student.fullName}</p>
-                <p className="text-xs text-slate-400">{student.department || "General"} • {student.eventsAttended?.length || 0} events</p>
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="font-medium text-slate-600">{student.collegeName}</span>
+                  <span>•</span>
+                  <span>{student.state}</span>
+                </div>
               </div>
-              {student.badges?.length > 0 && (
-                <span className="text-xs bg-purple-50 text-purple-700 font-semibold px-2 py-1 rounded-full border border-purple-100 hidden md:block">
-                  🏅 {student.badges.length} badge{student.badges.length > 1 ? "s" : ""}
-                </span>
-              )}
-              <div className="text-right">
+              <div className="text-right items-center gap-3 hidden sm:flex">
+                <div className="text-center bg-indigo-50 px-2 py-1 rounded-md">
+                   <p className="text-[9px] text-indigo-500 font-bold leading-none">STATE</p>
+                   <p className="text-xs font-black text-indigo-700">#{student.ranking?.state || "-"}</p>
+                </div>
+                <div className="text-center bg-purple-50 px-2 py-1 rounded-md">
+                   <p className="text-[9px] text-purple-500 font-bold leading-none">COLL</p>
+                   <p className="text-xs font-black text-purple-700">#{student.ranking?.college || "-"}</p>
+                </div>
+              </div>
+              <div className="text-right min-w-[50px]">
                 <p className="text-lg font-black text-indigo-600">{student.points}</p>
                 <p className="text-[10px] text-slate-400 uppercase font-bold">XP</p>
               </div>
             </motion.div>
           ))}
-          {data.topStudents.length === 0 && (
-            <p className="text-center py-12 text-slate-400">No student data yet</p>
-          )}
         </div>
       </div>
+
+      {/* State-Level Analytics (Managed state data) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <MapPin size={18} className="text-emerald-600" />
+              State-wise Performance
+            </h3>
+          </div>
+          <div className="p-4">
+             {data.stateStats.map((st, i) => (
+                <div key={st._id} className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors rounded-xl">
+                  <span className="font-bold text-slate-700">{st._id || "Other"}</span>
+                  <div className="flex gap-4">
+                    <div className="text-right">
+                       <p className="text-[10px] text-slate-400 font-bold uppercase">Users</p>
+                       <p className="font-bold text-slate-800">{st.totalStudents}</p>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-[10px] text-slate-400 font-bold uppercase">Avg XP</p>
+                       <p className="font-black text-indigo-600">{Math.round(st.avgPoints)}</p>
+                    </div>
+                  </div>
+                </div>
+             ))}
+          </div>
+        </div>
+
+        {/* 1st Rank Differentiation: Fraud Monitoring (Safety System) */}
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden ring-2 ring-red-50">
+          <div className="px-6 py-4 border-b border-red-100 bg-red-50/50">
+            <h3 className="font-bold text-red-900 flex items-center gap-2">
+              <ShieldAlert size={18} className="text-red-600" />
+              Fraud Monitoring Hub
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-red-50/30 text-red-400 text-[10px] font-black uppercase">
+                <tr>
+                  <th className="px-4 py-3 text-left">Student / College</th>
+                  <th className="px-4 py-3 text-center">Flags</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-red-50">
+                {data.flaggedUsers.map(user => (
+                  <tr key={user._id}>
+                    <td className="px-4 py-3">
+                      <p className="font-bold text-slate-900">{user.fullName}</p>
+                      <p className="text-[10px] text-slate-400">{user.collegeName}</p>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                       <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-black text-xs">
+                         {user.flags.length}
+                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${user.status === 'inactive' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                         {user.status === 'inactive' ? 'BANNED' : 'WATCH'}
+                       </span>
+                    </td>
+                  </tr>
+                ))}
+                {data.flaggedUsers.length === 0 && (
+                  <tr><td colSpan="3" className="text-center py-10 text-slate-400 italic">No suspicious activity detected</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

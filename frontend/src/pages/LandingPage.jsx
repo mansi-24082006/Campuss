@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Users, Trophy, BookOpen, Zap, Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import WorkflowSection from '@/components/WorkflowSection';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -60,8 +61,8 @@ const LandingPage = () => {
       <div className="w-full">
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-32 md:pt-40 pb-20 px-4 md:px-8">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-100/50 via-blue-100/50 to-pink-100/50 dark:from-purple-950/20 dark:via-blue-950/20 dark:to-pink-950/20"></div>
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/az-subtle.png')] opacity-2 dark:opacity-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white to-violet-50/80"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/az-subtle.png')] opacity-5"></div>
           <div className="relative max-w-7xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -69,11 +70,11 @@ const LandingPage = () => {
               transition={{ duration: 0.8 }}
               className="text-center"
             >
-              <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 tracking-tighter bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-gradient-x">
+              <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 tracking-tighter bg-gradient-to-r from-slate-900 via-indigo-600 to-slate-900 bg-clip-text text-transparent animate-gradient-x">
                 CampusBuzz
               </h1>
 
-              <p className="text-lg md:text-2xl text-slate-700 dark:text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed px-4">
+              <p className="text-lg md:text-2xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed px-4">
                 Your ultimate college event aggregator. Discover, register, and excel in hackathons, seminars, tech fests, and competitions across your campus.
               </p>
 
@@ -85,7 +86,7 @@ const LandingPage = () => {
               >
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-6 text-lg font-bold rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:scale-105 transition-all"
+                  className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-6 text-lg font-bold rounded-2xl shadow-xl shadow-indigo-500/20 hover:shadow-2xl hover:scale-105 transition-all"
                   onClick={() => navigate('/login')}
                 >
                   Get Started
@@ -93,7 +94,7 @@ const LandingPage = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full sm:w-auto border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 px-10 py-6 text-lg font-bold rounded-2xl transition-all"
+                  className="w-full sm:w-auto border-2 border-slate-200 text-slate-700 hover:bg-slate-50 px-10 py-6 text-lg font-bold rounded-2xl transition-all"
                   onClick={() => navigate('/features')}
                 >
                   Learn More
@@ -104,7 +105,7 @@ const LandingPage = () => {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-24 px-4 md:px-8 bg-slate-50/50 dark:bg-slate-950/20 backdrop-blur-sm">
+        <section id="features" className="py-24 px-4 md:px-8 bg-white/50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -113,10 +114,10 @@ const LandingPage = () => {
               viewport={{ once: true }}
               className="text-center mb-20"
             >
-              <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight dark:text-white">
+              <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight text-slate-900">
                 Why Choose CampusBuzz?
               </h2>
-              <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
                 Experience the future of college event management with our comprehensive, state-of-the-art platform.
               </p>
             </motion.div>
@@ -130,17 +131,17 @@ const LandingPage = () => {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="group relative glass-effect border-white/20 dark:border-slate-800/50 h-full hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 rounded-[2rem] overflow-hidden">
+                  <Card className="group relative glass-effect border-white/20 h-full hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 rounded-[2rem] overflow-hidden">
                     <CardHeader className="text-center pb-2">
                       <div className="mx-auto mb-6 p-4 bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 rounded-2xl shadow-lg ring-4 ring-indigo-500/10 group-hover:rotate-6 transition-transform">
                         <feature.icon className="h-8 w-8 text-white" />
                       </div>
-                      <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                      <CardTitle className="text-2xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                         {feature.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <CardDescription className="text-slate-600 dark:text-slate-400 text-center text-base leading-relaxed px-2">
+                      <CardDescription className="text-slate-600 text-center text-base leading-relaxed px-2">
                         {feature.description}
                       </CardDescription>
                     </CardContent>
@@ -152,6 +153,9 @@ const LandingPage = () => {
           </div>
         </section>
 
+        {/* Workflow Section */}
+        <WorkflowSection />
+
         {/* CTA Section */}
         <section className="py-24 px-4 md:px-8">
           <div className="max-w-5xl mx-auto">
@@ -160,10 +164,10 @@ const LandingPage = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="relative p-10 md:p-20 bg-gradient-to-br from-indigo-600 via-violet-700 to-purple-800 rounded-[3rem] overflow-hidden text-center shadow-2xl"
+              className="relative p-10 md:p-20 bg-gradient-to-br from-indigo-700 via-violet-800 to-indigo-900 rounded-[3rem] overflow-hidden text-center shadow-2xl"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
               
               <h2 className="text-3xl md:text-6xl font-black text-white mb-8 tracking-tighter leading-tight">
                 Ready to Transform Your <br /> Campus Experience?

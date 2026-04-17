@@ -12,8 +12,28 @@ const eventSchema = new mongoose.Schema(
     // New enum type for better filter support
     type: {
       type: String,
-      enum: ["hackathon", "seminar", "tech-fest", "competition", "workshop", "other"],
+      enum: [
+        "Technical", 
+        "Non-Technical", 
+        "Cultural", 
+        "Academic", 
+        "Competition", 
+        "Gaming & Fun", 
+        "Social & Awareness",
+        "Interdisciplinary",
+        "National Level",
+        "other"
+      ],
       default: "other",
+    },
+    mode: {
+      type: String,
+      enum: ["Online", "Offline"],
+      default: "Offline",
+    },
+    department: {
+      type: String,
+      default: "General",
     },
     participationLevel: {
       type: String,
@@ -45,12 +65,14 @@ const eventSchema = new mongoose.Schema(
       },
     ],
     venue: String,
+    image: String,
     status: {
       type: String,
       enum: ["pending", "approved", "rejected", "completed", "active", "upcoming"],
       default: "pending",
     },
     description: String,
+    organizerName: String, // Department or Club name
     prizeDetails: String,
     rules: String,
     winners: [

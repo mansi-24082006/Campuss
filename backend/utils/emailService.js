@@ -91,3 +91,28 @@ export const getCertificateTemplate = (userName, event, certificateUrl) => `
   <p style="color: #94a3b8; font-size: 12px;">You can also access this from your CampusBuzz Profile dashboard at any time.</p>
 </div>
 `;
+export const getAnnouncementTemplate = (userName, event, message, type) => `
+<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+  <div style="text-align: center; margin-bottom: 25px;">
+    <div style="display: inline-block; padding: 8px 16px; border-radius: 20px; background-color: ${type === 'warning' ? '#fff7ed' : type === 'success' ? '#f0fdf4' : '#f0f9ff'}; color: ${type === 'warning' ? '#ea580c' : type === 'success' ? '#16a34a' : '#0284c7'}; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">
+      📢 New Announcement
+    </div>
+    <h1 style="color: #1e293b; margin: 0; font-size: 24px; letter-spacing: -0.02em;">Update for ${event.title}</h1>
+  </div>
+  
+  <p style="font-size: 16px; color: #475569; line-height: 1.6;">Hi <strong>${userName}</strong>,</p>
+  
+  <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 20px 0; border: 1px solid #f1f5f9;">
+    <p style="margin: 0; color: #334155; font-size: 15px; line-height: 1.7; white-space: pre-wrap;">${message}</p>
+  </div>
+  
+  <p style="color: #64748b; font-size: 14px; margin-top: 25px;">
+    You are receiving this because you are registered for <strong>${event.title}</strong>. 
+    Stay tuned for more updates on the <a href="${process.env.FRONTEND_URL}/event/${event._id}" style="color: #4f46e5; text-decoration: none; font-weight: 600;">Event Portal</a>.
+  </p>
+  
+  <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+    <p style="color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">© 2026 CampusBuzz Platform • Connecting Campus Life</p>
+  </div>
+</div>
+`;

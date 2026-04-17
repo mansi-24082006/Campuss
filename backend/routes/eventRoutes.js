@@ -21,14 +21,15 @@ import {
 } from "../controllers/eventController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
+import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", protect, getEvents);
 router.get("/:id", protect, getEventById);
-router.post("/", protect, allowRoles("faculty", "admin"), createEvent);
-router.put("/:id", protect, allowRoles("faculty", "admin"), updateEvent);
-router.delete("/:id", protect, allowRoles("admin"), deleteEvent);
+router.post("/", protect, allowRoles("faculty", "admin"), upload.single("image"), createEvent);
+router.put("/:id", protect, allowRoles("faculty", "admin"), upload.single("image"), updateEvent);
+router.delete("/:id", protect, allowRoles("faculty", "admin"), deleteEvent);
 
 // Status update (Approve/Reject)
 router.patch("/:id/status", protect, allowRoles("admin"), updateEventStatus);

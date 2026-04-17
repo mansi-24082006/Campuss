@@ -1,23 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
-  Users,
-  TrendingUp,
-  BarChart3,
-  ShieldCheck,
-  RefreshCcw,
-  LogOut,
-  Settings,
-  Bell,
-  Megaphone,
-  CheckCircle2,
-  Clock,
-  MessageSquare,
-  ChevronRight,
-  ArrowRight,
-  Search,
-  Star
+  Calendar, Users, TrendingUp, ShieldCheck,
+  Megaphone, CheckCircle2, MessageSquare,
+  ArrowRight, Star, LayoutDashboard,
+  GraduationCap, MessageCircle, UserCircle, Menu, Search,
+  Bell, Sparkles, LogOut, Settings, Plus, Edit2, Save, X, Phone, Building, Mail, MapPin, User as UserIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -25,49 +12,62 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Helmet } from "react-helmet-async";
 
-import MyEvents from "./MyEvents";
-import StudentList from "./StudentList";
+import FacultyMyEvents from "./MyEvents";
+import FacultyStudentList from "./StudentList";
 import ProfileSection from "./ProfileSection";
-import CreateEventModal from "./CreateEventModal";
 import AnnouncementModal from "./AnnouncementModal";
 import FeedbackTab from "./FeedbackTab";
+import CreateEventModal from "./CreateEventModal";
+import Footer from "@/components/layout/Footer";
 import { getAvatarUrl } from "@/lib/avatar";
-
+import NotificationCenter from "@/components/NotificationCenter";
 import api from "@/lib/axios";
 
 const FacultyDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-
   const [events, setEvents] = useState([]);
-  const [students, setStudents] = useState([]);
   const [sentAnnouncements, setSentAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("events");
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [recentFeedback, setRecentFeedback] = useState([]);
+
+  // Dynamic greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   const fetchFacultyData = async () => {
     try {
       setLoading(true);
-      const [eventsRes, usersRes, sentRes] = await Promise.allSettled([
+      const [eventsRes, sentRes, feedbackRes] = await Promise.allSettled([
         api.get("/events"),
-        api.get("/users"),
-        api.get("/notifications/sent")
+        api.get("/notifications/sent"),
+        api.get("/feedback")
       ]);
-
       if (eventsRes.status === "fulfilled") setEvents(eventsRes.value.data);
-      if (usersRes.status === "fulfilled") {
-        const allUsers = usersRes.value.data;
-        const studentUsers = allUsers.filter(u => u.role === "student");
-        setStudents(studentUsers);
-      }
       if (sentRes.status === "fulfilled") setSentAnnouncements(sentRes.value.data);
-
+      if (feedbackRes.status === "fulfilled") setRecentFeedback(feedbackRes.value.data.slice(0, 3));
     } catch (error) {
       console.error("Dashboard sync failed:", error);
+      toast({
+        title: "Sync failed",
+        description: "Please check your connection and refresh.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -77,331 +77,359 @@ const FacultyDashboard = () => {
     fetchFacultyData();
   }, []);
 
-  const handleEditEvent = (eventId) => {
-    const event = events.find((e) => e._id === eventId);
-    if (event) {
-      setEditingEvent(event);
-      setShowCreateModal(true);
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Trigger parent components to refilter if needed
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const myEvents = events.filter((e) => {
+    const isMine = (e.organizer?._id || e.organizer) === user?._id ||
+      (e.assignedFaculty?._id || e.assignedFaculty) === user?._id;
+    if (!isMine) return false;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return e.title?.toLowerCase().includes(query) ||
+        e.venue?.toLowerCase().includes(query) ||
+        e.description?.toLowerCase().includes(query);
     }
-  };
+    return true;
+  });
 
-  // Filter events where faculty is organizer or assigned
-  const myEvents = events.filter((e) =>
-    (e.organizer?._id || e.organizer) === user?._id ||
-    (e.assignedFaculty?._id || e.assignedFaculty) === user?._id
-  );
-
-  // Advanced Stats Calculation
   const totalRegistered = myEvents.reduce((sum, e) => sum + (e.registeredStudents?.length || 0), 0);
   const totalAttended = myEvents.reduce((sum, e) => sum + (e.attendedStudents?.length || 0), 0);
-  const totalVerified = myEvents.reduce((sum, e) => sum + (e.verifiedStudents?.length || 0), 0);
   const attendanceRate = totalRegistered > 0 ? Math.round((totalAttended / totalRegistered) * 100) : 0;
 
-  const stats = [
-    { label: "Assigned Events", value: myEvents.length, icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Upcoming", value: myEvents.filter((e) => new Date(e.date) > new Date() && e.status !== "completed").length, icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Active Now", value: myEvents.filter((e) => e.status === "active").length, icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Total Students", value: totalRegistered, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
+  // Compute average rating from events if available
+  const averageRating = myEvents.length > 0
+    ? (myEvents.reduce((sum, e) => sum + (e.averageRating || 4.8), 0) / myEvents.length).toFixed(1)
+    : "4.8";
+
+  const NavItems = [
+    { id: "events", label: "Events", icon: LayoutDashboard },
+    { id: "students", label: "Students", icon: GraduationCap },
+    { id: "feedback", label: "Feedback", icon: MessageCircle },
+    { id: "profile", label: "Settings", icon: UserCircle },
   ];
 
-  return (
-    <>
-      <div className="min-h-screen bg-[#F8FAFC]">
-        {/* Modern Header */}
-        <header className="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-8 h-16 md:h-20 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 md:gap-6 min-w-0">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 flex-shrink-0">
-                <ShieldCheck className="w-5 h-5 md:w-6 md:h-6" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-lg md:text-xl font-black tracking-tight truncate">Faculty <span className="hidden xs:inline">Command</span></h1>
-                <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider hidden sm:block">Control Center</p>
-              </div>
-            </div>
+  const handleEditEvent = (eventInput) => {
+    if (eventInput) {
+      if (typeof eventInput === "object") {
+        setEditingEvent(eventInput);
+      } else {
+        const event = myEvents.find(e => e._id === eventInput);
+        setEditingEvent(event);
+      }
+    } else {
+      setEditingEvent(null);
+    }
+    setIsEventModalOpen(true);
+  };
 
-            <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-              <Button
-                onClick={() => setShowAnnouncementModal(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-white rounded-full px-3 md:px-5 h-9 font-bold shadow-lg shadow-amber-500/20 transition-all text-[10px] md:text-xs flex items-center gap-1.5"
-              >
-                <Megaphone size={14} className="flex-shrink-0" /> <span className="hidden sm:inline">Announcement</span>
-              </Button>
-              
-              <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-slate-200 dark:border-slate-800">
-                <div className="text-right hidden lg:block">
-                  <p className="text-sm font-black leading-none">{user?.fullName}</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Senior Faculty</p>
-                </div>
-                <Avatar className="h-8 w-8 md:h-10 md:h-10 border-2 border-white dark:border-slate-800 shadow-md">
-                  <AvatarImage src={getAvatarUrl(user)} />
-                  <AvatarFallback className="bg-indigo-600 text-white">{user?.fullName?.[0]}</AvatarFallback>
-                </Avatar>
-              </div>
+  const handleCreateEvent = () => {
+    setEditingEvent(null);
+    setIsEventModalOpen(true);
+  };
+
+  const StatsSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      {Array(4).fill(0).map((_, i) => (
+        <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="flex min-h-screen bg-[#F8FAFC]">
+      <Helmet><title>Faculty Hub | CampusBuzz</title></Helmet>
+
+      {/* SIDEBAR: Fixed on Left for Desktop */}
+      <aside className="hidden lg:flex w-72 flex-col fixed top-20 bottom-0 left-0 z-50 bg-white border-r border-slate-200">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+              <ShieldCheck size={24} />
             </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black tracking-tight text-slate-900 leading-none">FacultyHub</span>
+              <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-1">Management Portal</span>
+            </div>
+          </div>
+
+          <nav className="space-y-1.5">
+            {NavItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === item.id
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+              >
+                <item.icon size={20} className={activeTab === item.id ? "text-white" : "text-slate-400"} />
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-auto p-4 border-t border-slate-100 flex flex-col gap-3">
+          <div className="p-4 bg-slate-900 rounded-[1.5rem] text-white relative overflow-hidden group">
+            <Sparkles size={60} className="absolute -bottom-4 -right-4 opacity-10 group-hover:scale-110 transition-transform" />
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Power Tip</p>
+            <p className="text-[11px] text-slate-300 leading-tight mb-3">Send instant broadcasts to all students!</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowAnnouncementModal(true)}
+              className="w-full bg-white/10 border-0 text-white hover:bg-white/20 font-bold h-8 text-[11px]"
+            >
+              Broadcast
+            </Button>
+          </div>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 lg:ml-72 min-w-0 flex flex-col">
+        {/* Sticky Top Header */}
+        <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-20 z-40 px-4 md:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="lg:hidden">
+              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon"><Menu /></Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72 p-0 flex flex-col">
+                  <div className="p-8 flex items-center gap-3 border-b border-slate-50">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="font-black text-xl tracking-tight text-slate-900 leading-none">FacultyHub</span>
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-1">Management Portal</span>
+                    </div>
+                  </div>
+                  <nav className="flex-1 px-4 space-y-2 mt-4">
+                    {NavItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => { setActiveTab(item.id); setIsSheetOpen(false); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === item.id ? "bg-indigo-600 text-white" : "text-slate-500"
+                          }`}
+                      >
+                        <item.icon size={20} /> {item.label}
+                      </button>
+                    ))}
+
+                    <div className="h-px bg-slate-100 my-4" />
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl border-slate-200 font-bold h-12 flex items-center gap-2"
+                      onClick={() => { setShowAnnouncementModal(true); setIsSheetOpen(false); }}
+                    >
+                      <Megaphone size={18} /> Broadcast
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
+            <h1 className="text-lg font-bold text-slate-800 hidden sm:block">Faculty Overview</h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="relative group hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Search resources..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-72 pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm font-medium focus:ring-2 ring-indigo-500/20 transition-all outline-none"
+              />
+            </div>
+            <NotificationCenter />
           </div>
         </header>
 
-        <main className="max-w-[1600px] mx-auto px-4 sm:px-8 py-8 space-y-8">
+        {/* Inner Content Container */}
+        <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 flex-1 w-full">
+
           {/* Welcome Section */}
-          <section className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="relative z-10 text-center sm:text-left">
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mb-3"
-              >
-                Welcome, Prof. {user?.fullName?.split(' ')[0]}
-              </motion.h2>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 md:gap-3">
-                <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800 px-3 py-1 rounded-lg font-bold text-[10px] sm:text-xs">
-                  {myEvents.length} Events Assigned
-                </Badge>
-                <Badge className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800 px-3 py-1 rounded-lg font-bold text-[10px] sm:text-xs">
-                  {totalRegistered} Active Students
-                </Badge>
-              </div>
-            </div>
-            {/* Abstract background shapes */}
-            <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-indigo-500/5 to-transparent hidden sm:block" />
-          </section>
-
-          {/* ... Stats grid remains the same as it is already responsive with sm:grid-cols-2 ... */}
-
-          {/* Stats & Insights Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Stats Column */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {stats.map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <Card className="border-slate-200 rounded-[2rem] hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group overflow-hidden">
-                      <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-500`}>
-                            <stat.icon size={26} />
-                          </div>
-                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-0 rounded-lg text-[10px] font-bold">
-                            REAL-TIME
-                          </Badge>
-                        </div>
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                        <h3 className="text-4xl font-black text-slate-900 mt-1">{stat.value}</h3>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Student Activity Graph-like Section */}
-              <Card className="border-slate-200 rounded-[2.5rem] bg-white overflow-hidden shadow-sm">
-                <CardContent className="p-8">
-                  <div className="flex justify-between items-center mb-8">
-                    <div>
-                      <h3 className="text-xl font-black text-slate-900">Student Participation</h3>
-                      <p className="text-sm text-slate-500 font-medium">Breakdown of attendance and verification</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-black text-indigo-600">{attendanceRate}%</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Attendance</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Attendance Bar */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
-                        <span>Attended ({totalAttended})</span>
-                        <span>{totalRegistered} Registered</span>
-                      </div>
-                      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${attendanceRate}%` }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                          className="h-full bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 rounded-full"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Verification Bar */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-slate-500">
-                        <span>Verified Certificates ({totalVerified})</span>
-                        <span>{totalAttended} Eligible</span>
-                      </div>
-                      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${totalAttended > 0 ? (totalVerified / totalAttended) * 100 : 0}%` }}
-                          transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
-                          className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-50">
-                    <div className="text-center">
-                      <p className="text-2xl font-black text-slate-800">{totalRegistered}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Registered</p>
-                    </div>
-                    <div className="text-center border-x border-slate-100 px-4">
-                      <p className="text-2xl font-black text-slate-800">{totalAttended}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Present</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-black text-slate-800">{totalVerified}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Verified</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Sidebar Columns: Announcements & Feedback */}
-            <div className="space-y-8">
-              {/* Recent Announcements */}
-              <Card className="border-slate-200 rounded-[2.5rem] bg-slate-900 text-white overflow-hidden shadow-xl shadow-slate-200/50">
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-black flex items-center gap-2">
-                      <Megaphone size={18} className="text-indigo-400" />
-                      Recent Broadcasts
-                    </h3>
-                    <Badge className="bg-white/10 text-white border-0">{sentAnnouncements.length}</Badge>
-                  </div>
-
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
-                    {sentAnnouncements.length === 0 ? (
-                      <div className="py-10 text-center opacity-40">
-                        <MessageSquare size={32} className="mx-auto mb-3" />
-                        <p className="text-xs font-medium">No announcements sent yet</p>
-                      </div>
-                    ) : (
-                      sentAnnouncements.map((ann, i) => (
-                        <div key={ann._id} className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
-                          <p className="text-xs font-bold text-indigo-300 mb-1">{new Date(ann.createdAt).toLocaleDateString()}</p>
-                          <p className="text-sm text-slate-200 line-clamp-2 leading-relaxed">{ann.message}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={() => setShowAnnouncementModal(true)}
-                    className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl h-11"
-                  >
-                    New Announcement
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Feedback Highlights */}
-              <Card className="border-slate-200 rounded-[2.5rem] bg-white overflow-hidden shadow-sm">
-                <CardContent className="p-8">
-                  <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                    <Star size={18} className="text-amber-400" />
-                    Feedback Pulse
-                  </h3>
-
-                  <div className="space-y-4">
-                    {myEvents.some(e => e.feedback?.length > 0) ? (
-                      myEvents.filter(e => e.feedback?.length > 0).slice(0, 3).map((e, i) => (
-                        <div key={e._id} className="group cursor-pointer">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-bold text-slate-800 truncate pr-2">{e.title}</span>
-                            <div className="flex items-center text-amber-500 font-bold text-[10px]">
-                              {(e.feedback.reduce((a, b) => a + b.rating, 0) / e.feedback.length).toFixed(1)} ★
-                            </div>
-                          </div>
-                          <div className="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-amber-400"
-                              style={{ width: `${(e.feedback.reduce((a, b) => a + b.rating, 0) / e.feedback.length / 5) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-slate-400 text-center py-6 font-medium">Waiting for student reviews...</p>
-                    )}
-                  </div>
-
-                  <div className="mt-8 pt-6 border-t border-slate-50 text-center">
-                    <p className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline flex items-center justify-center gap-1 group">
-                      View Detailed Reports <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Main Content Tabs */}
-          <Tabs defaultValue="events" className="space-y-8 pt-8">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <section className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Management Desk</h2>
-                <p className="text-sm text-slate-500">Fine-tune events, students, and certificates</p>
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">Performance Insights</p>
+                <h2 className="text-xl font-black text-slate-900 leading-tight">{getGreeting()}, {user?.fullName?.split(' ')[0]} </h2>
               </div>
-              <TabsList className="bg-slate-200/60 rounded-2xl p-1">
-                {["events", "students", "feedback", "profile"].map((t) => (
-                  <TabsTrigger
-                    key={t}
-                    value={t}
-                    className="rounded-xl px-1 sm:px-8 py-2.5 text-[10px] font-black uppercase tracking-wider data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all"
-                  >
-                    {t}
-                  </TabsTrigger>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="rounded-xl border-slate-200 font-bold"
+                  onClick={() => setShowAnnouncementModal(true)}
+                >
+                  Quick Broadcast
+                </Button>
+                <Button
+                  className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold"
+                  onClick={handleCreateEvent}
+                >
+                  <Plus className="mr-2" size={18} /> New Event
+                </Button>
+              </div>
+            </div>
+
+            {/* Stats - With Skeleton Loader */}
+            {loading ? (
+              <StatsSkeleton />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                {[
+                  { label: "Attendance", value: `${attendanceRate}%`, icon: TrendingUp, color: "bg-indigo-50 text-indigo-600" },
+                  { label: "Total Students", value: totalRegistered.toLocaleString(), icon: Users, color: "bg-emerald-50 text-emerald-600" },
+                  { label: "Assigned", value: myEvents.length, icon: Calendar, color: "bg-blue-50 text-blue-600" }
+                ].map((stat, i) => (
+                  <Card key={i} className="border-none shadow-sm rounded-2xl hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 md:p-5 flex items-center gap-4">
+                      <div className={`p-2.5 rounded-xl ${stat.color} shadow-sm shrink-0`}>
+                        <stat.icon size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                        <p className="text-lg font-black text-slate-900 tracking-tighter mt-0.5">{stat.value}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TabsList>
+              </div>
+            )}
+
+            {/* Content Tabs */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-8">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                  <TabsContent value="events" className="mt-0 outline-none">
+                    <FacultyMyEvents events={myEvents} handleEditEvent={handleEditEvent} onRefresh={fetchFacultyData} />
+                  </TabsContent>
+                  <TabsContent value="students" className="mt-0 outline-none">
+                    <FacultyStudentList events={myEvents} />
+                  </TabsContent>
+                  <TabsContent value="feedback" className="mt-0 outline-none">
+                    <FeedbackTab events={myEvents} />
+                  </TabsContent>
+                  <TabsContent value="profile" className="mt-0 outline-none">
+                    <ProfileSection user={user} toast={toast} />
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              {/* Sidebar Cards */}
+              <div className="lg:col-span-4 space-y-6">
+                <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-slate-200/50">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-5 flex items-center gap-2">
+                    <Megaphone size={14} className="text-indigo-400" /> Recent Broadcasts
+                  </h3>
+                  <div className="space-y-6">
+                    {sentAnnouncements.length > 0 ? sentAnnouncements.slice(0, 5).map((ann, i) => (
+                      <div key={ann._id || i} className="flex gap-4 border-l-2 border-slate-800 pl-4 relative">
+                        <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-indigo-500" />
+                        <div>
+                          <p className="text-sm font-bold text-slate-200 leading-tight mb-1">{ann.message}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">
+                            {ann.createdAt ? new Date(ann.createdAt).toLocaleDateString() : 'Just now'}
+                          </p>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="text-center py-6">
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">No recent alerts</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-indigo-600 rounded-3xl p-6 text-white relative overflow-hidden group">
+                  <div className="relative z-10">
+                    <h2 className="text-lg font-black mb-1">Push Broadcast</h2>
+                    <p className="text-indigo-100 text-xs mb-4">Need to reach everyone? Send an instant notification to all registered students.</p>
+                    <Button
+                      onClick={() => setShowAnnouncementModal(true)}
+                      className="w-full rounded-xl bg-white/10 border-0 text-white hover:bg-white/20 font-bold py-5"
+                    >
+                      Open Broadcast
+                    </Button>
+                  </div>
+                  <Megaphone size={100} className="absolute -bottom-4 -right-4 opacity-10 group-hover:scale-110 transition-transform" />
+                </div>
+
+                {/* Recent Student Feedback - NEW */}
+                <Card className="border-slate-200 rounded-3xl p-6 shadow-sm bg-white overflow-hidden relative group">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                       <MessageCircle size={14} className="text-indigo-500" /> Student Insights
+                    </h3>
+                    <button onClick={() => setActiveTab("feedback")} className="text-[9px] font-bold text-indigo-600 hover:underline px-2 py-1 bg-indigo-50 rounded-lg">View All</button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {recentFeedback.length === 0 ? (
+                      <p className="text-[11px] text-slate-400 font-medium py-2">No student suggestions yet.</p>
+                    ) : (
+                      recentFeedback.map((fb, i) => (
+                        <div key={i} className="space-y-1.5 pb-3 border-b border-slate-50 last:border-0 last:pb-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-black text-slate-900 line-clamp-1">{fb.studentId?.fullName}</span>
+                            <span className="text-[8px] font-bold text-slate-300 uppercase">{new Date(fb.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 leading-tight line-clamp-2 italic">"{fb.message}"</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </Card>
+
+                <Card className="border-slate-200 rounded-3xl p-6 shadow-sm bg-white">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-[9px]">Quick Status</h3>
+                  </div>
+                  <div className="space-y-3 pt-3">
+                    <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                      <span className="text-[11px] font-bold text-slate-500">Active Events</span>
+                      <Badge className="bg-indigo-100 text-indigo-600 border-none px-2.5 py-0.5 font-black text-[9px]">
+                        {myEvents.filter(e => e.status === 'approved').length}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                      <span className="text-[11px] font-bold text-slate-500">Total Reach</span>
+                      <span className="text-[11px] font-black text-slate-900">{totalRegistered} Students</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             </div>
+          </section>
+        </div>
 
-            <div className="bg-white rounded-[3rem] p-4 sm:p-8 border border-slate-200 shadow-sm min-h-[600px]">
-              <TabsContent value="events" className="mt-0 outline-none">
-                <MyEvents events={myEvents} onEdit={handleEditEvent} onRefresh={fetchFacultyData} />
-              </TabsContent>
+        <Footer />
+      </main>
 
-              <TabsContent value="students" className="mt-0 outline-none">
-                <StudentList events={myEvents} />
-              </TabsContent>
+      <AnnouncementModal
+        isOpen={showAnnouncementModal}
+        onClose={() => setShowAnnouncementModal(false)}
+        events={myEvents.filter(e => e.status !== 'completed')}
+        onSuccess={fetchFacultyData}
+      />
 
-              <TabsContent value="feedback" className="mt-0 outline-none">
-                <FeedbackTab events={myEvents} />
-              </TabsContent>
-
-              <TabsContent value="profile" className="mt-0 outline-none">
-                <ProfileSection user={user} />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </main>
-
-        {/* Modals */}
-        <AnnouncementModal
-          isOpen={showAnnouncementModal}
-          onClose={() => setShowAnnouncementModal(false)}
-          events={myEvents.filter(e => e.status !== 'completed')}
-          onSuccess={fetchFacultyData}
-        />
-
-        <CreateEventModal
-          isOpen={showCreateModal}
-          onClose={() => {
-            setShowCreateModal(false);
-            setEditingEvent(null);
-          }}
-          onSuccess={fetchFacultyData}
-          eventData={editingEvent}
-        />
-      </div>
-    </>
+      <CreateEventModal
+        isOpen={isEventModalOpen}
+        onClose={() => setIsEventModalOpen(false)}
+        onSuccess={fetchFacultyData}
+        eventData={editingEvent}
+      />
+    </div>
   );
 };
 

@@ -4,6 +4,8 @@ import {
   markAsRead,
   markAllAsRead,
   broadcastNotification,
+  globalBroadcast,
+  facultyBroadcast,
   getSentNotifications,
 } from "../controllers/notificationController.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -16,6 +18,9 @@ router.use(protect); // All routes protected
 router.get("/", getNotifications);
 router.patch("/:id/read", markAsRead);
 router.patch("/read-all", markAllAsRead);
+router.get("/sent", allowRoles("faculty", "admin"), getSentNotifications);
 router.post("/broadcast/:eventId", allowRoles("faculty", "admin"), broadcastNotification);
+router.post("/global-broadcast", allowRoles("admin"), globalBroadcast);
+router.post("/faculty-broadcast", allowRoles("faculty"), facultyBroadcast);
 
 export default router;

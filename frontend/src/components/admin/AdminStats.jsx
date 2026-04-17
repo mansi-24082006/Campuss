@@ -2,109 +2,95 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Users,
   Calendar,
   TrendingUp,
-  UserCheck,
-  Award,
-  Clock, // Added for pending approvals
+  UserPlus,
+  ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 
 /* -------------------- STATS CONFIG -------------------- */
 const statItems = [
   {
-    icon: Users,
-    key: "totalUsers",
-    label: "Total Users",
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-100/60 dark:bg-blue-500/10",
+    icon: UserPlus,
+    key: "studentCount",
+    label: "Students",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+  },
+  {
+    icon: ShieldCheck,
+    key: "facultyCount",
+    label: "Faculty",
+    color: "text-orange-600",
+    bg: "bg-orange-50",
   },
   {
     icon: Calendar,
     key: "totalEvents",
     label: "Total Events",
-    color: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-100/60 dark:bg-indigo-500/10",
+    color: "text-indigo-600",
+    bg: "bg-indigo-50",
   },
   {
-    icon: TrendingUp, // Better suited for "Active"
+    icon: TrendingUp,
     key: "activeEvents",
-    label: "Active Events",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-100/60 dark:bg-emerald-500/10",
+    label: "Active",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
   },
   {
-    icon: Clock, // Changed from Calendar for visual variety
+    icon: CheckCircle2,
     key: "pendingApprovals",
     label: "Pending",
-    color: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-100/60 dark:bg-orange-500/10",
-  },
-  {
-    icon: UserCheck,
-    key: "totalParticipations",
-    label: "Entries",
-    color: "text-purple-600 dark:text-purple-400",
-    bg: "bg-purple-100/60 dark:bg-purple-500/10",
-  },
-  {
-    icon: Award,
-    key: "certificatesIssued",
-    label: "Certificates",
-    color: "text-yellow-600 dark:text-yellow-400",
-    bg: "bg-yellow-100/60 dark:bg-yellow-500/10",
+    color: "text-amber-600",
+    bg: "bg-amber-50",
   },
 ];
 
 /* -------------------- COMPONENT -------------------- */
 const AdminStats = ({ stats = {} }) => {
   return (
-    /* grid-cols-1: Mobile
-       sm:grid-cols-2: Small tablets
-       lg:grid-cols-3: Large tablets/Small laptops
-       xl:grid-cols-6: Full desktop (Single Row)
+    /* FIXED: Changed to grid-cols-5 on large screens to keep everything in one line.
+       Added min-w-max so cards don't get too squished on medium screens.
     */
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-10">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
       {statItems.map((item, index) => {
-        const value =
-          typeof stats[item.key] === "number"
-            ? stats[item.key]
-            : 0;
+        const value = typeof stats[item.key] === "number" ? stats[item.key] : 0;
 
         return (
           <motion.div
             key={item.key}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
           >
-            <Card className="group relative overflow-hidden rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-              {/* Reduced padding from p-6 to p-4 to fit 6 in a row better */}
+            <Card className="group relative overflow-hidden rounded-[1.25rem] border border-slate-200/60 bg-white transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-1">
               <CardContent className="p-4 sm:p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div
-                    className={`p-2.5 rounded-xl ${item.bg} ${item.color} transition-transform duration-300 group-hover:rotate-6`}
+                    className={`p-2.5 rounded-xl ${item.bg} ${item.color} transition-transform duration-500 group-hover:rotate-12`}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-4 w-4 md:h-5 md:w-5" />
                   </div>
 
-                  <span className="flex items-center text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100/60 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                  <span className="flex items-center text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
                     LIVE
                   </span>
                 </div>
 
                 <div className="space-y-0.5 relative z-10">
-                  <p className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 truncate">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 truncate">
                     {item.label}
                   </p>
-                  <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                  <h3 className="text-xl md:text-2xl font-black tracking-tight text-slate-900">
                     {value.toLocaleString()}
                   </h3>
                 </div>
 
-                {/* Decorative Background Icon - slightly smaller */}
-                <div className="pointer-events-none absolute -right-4 -bottom-4 opacity-[0.03] dark:opacity-[0.05] transition-transform duration-300 group-hover:scale-110">
-                  <item.icon size={80} />
+                {/* Decorative Background Icon */}
+                <div className="pointer-events-none absolute -right-3 -bottom-3 opacity-[0.03] transition-transform duration-500 group-hover:scale-110">
+                  <item.icon size={60} />
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { X, Calendar, MapPin, Users, Info, Sparkles, Award, Plus, Trash2, Mic, Link, Clock, ToggleLeft, ShieldCheck } from "lucide-react";
+import {
+  X,
+  Calendar,
+  MapPin,
+  Sparkles,
+  Award,
+  Plus,
+  Trash2,
+  Users,
+  Clock,
+  Info,
+  Layout,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,110 +23,158 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 import api from "@/lib/axios";
-import AnimatedSwitch from "@/components/ui/AnimatedSwitch";
-import { Check } from "lucide-react";
+import { getEventImageUrl } from "@/lib/utils";
+import { DEPARTMENTS } from "@/lib/departments";
+import { EVENT_DOMAINS, EVENT_CATEGORIES } from "@/lib/eventCategories";
 
 const defaultSpeaker = () => ({
   name: "",
   organization: "",
   bio: "",
-  sessionTitle: "",
-  sessionTime: "",
   photoUrl: "",
-  socialLinks: { linkedin: "", twitter: "", website: "" },
 });
 
 const CreateEventModal = ({ isOpen, onClose, onSuccess, eventData = null }) => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState(
-    eventData
-      ? {
-          title: eventData.title || "",
-          date: eventData.date ? new Date(eventData.date).toISOString().slice(0, 16) : "",
-          endDate: eventData.endDate ? new Date(eventData.endDate).toISOString().slice(0, 16) : "",
-          category: eventData.category || "Technical",
-          type: eventData.type || "other",
-          venue: eventData.venue || "",
-          registrationLimit: eventData.registrationLimit || "",
-          enableWaitlist: eventData.enableWaitlist || false,
-          participationLevel: eventData.participationLevel || "College",
-          description: eventData.description || "",
-          prizeDetails: eventData.prizeDetails || "",
-          rules: eventData.rules || "",
-          assignedFaculty: eventData.assignedFaculty?._id || eventData.assignedFaculty || "",
-        }
-      : {
-          title: "",
-          date: "",
-          endDate: "",
-          category: "Technical",
-          type: "other",
-          venue: "",
-          registrationLimit: "",
-          enableWaitlist: false,
-          participationLevel: "College",
-          description: "",
-          prizeDetails: "",
-          rules: "",
-          assignedFaculty: "",
-        }
-  );
-
-  const [speakers, setSpeakers] = useState(
-    eventData?.speakers?.length > 0 ? eventData.speakers : []
-  );
-  const [faculties, setFaculties] = useState([]);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState("basic");
 
+  // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+  const formatDateTime = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+    return localISOTime;
+  };
+
+  const [formData, setFormData] = useState({
+    title: "",
+    date: "",
+    endDate: "",
+    category: "",
+    type: "seminar",
+    venue: "",
+    registrationLimit: 150,
+    participationLevel: "College",
+    mode: "Offline",
+    department: "Computer",
+    description: "",
+    rules: "",
+    prizeDetails: "",
+    organizerName: "SSASIT Admin",
+    enableWaitlist: true,
+    assignedFaculty: "none",
+  });
+  const [speakers, setSpeakers] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  const resetForm = () => {
+    setFormData({
+      title: eventData?.title || "",
+      date: formatDateTime(eventData?.date),
+      endDate: formatDateTime(eventData?.endDate),
+      category: eventData?.category || "", // Empty to force selection
+      type: eventData?.type || "seminar",
+      venue: eventData?.venue || "",
+      registrationLimit: eventData?.registrationLimit || 150,
+      participationLevel: eventData?.participationLevel || "College",
+      mode: eventData?.mode || "Offline",
+      department: eventData?.department || "Computer",
+      description: eventData?.description || "",
+      rules: eventData?.rules || "",
+      prizeDetails: eventData?.prizeDetails || "",
+      organizerName: eventData?.organizerName || "SSASIT Admin",
+      enableWaitlist: eventData?.enableWaitlist ?? true,
+      assignedFaculty: eventData?.assignedFaculty?._id || "none",
+    });
+    setSpeakers(eventData?.speakers || []);
+    setImagePreview(eventData?.image || "");
+    setImageFile(null);
+    setActiveSection("basic");
+  };
+
   useEffect(() => {
-    const fetchFaculties = async () => {
-      if (user?.role === "admin") {
-        try {
-          const { data } = await api.get("/users");
-          setFaculties(data.filter((u) => u.role === "faculty"));
-        } catch (error) {
-          console.error("Failed to fetch faculties:", error);
-        }
-      }
-    };
-    if (isOpen) fetchFaculties();
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen, eventData]);
+
+  useEffect(() => {
+    if (isOpen && user?.role === "admin") {
+      api.get("/users").then(({ data }) =>
+        setFaculties(data.filter((u) => u.role === "faculty"))
+      );
+    }
   }, [isOpen, user]);
 
-  const updateSpeaker = (idx, field, value) => {
-    setSpeakers((prev) => {
-      const updated = [...prev];
-      if (field.includes(".")) {
-        const [parent, child] = field.split(".");
-        updated[idx] = { ...updated[idx], [parent]: { ...updated[idx][parent], [child]: value } };
-      } else {
-        updated[idx] = { ...updated[idx], [field]: value };
-      }
-      return updated;
-    });
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.title || !formData.date || !formData.category || !formData.description) {
+      return toast({ title: "Required Fields", description: "Title, Date, Category, and Description are required.", variant: "destructive" });
+    }
+
+    if (formData.endDate && formData.date) {
+      const start = new Date(formData.date);
+      const end = new Date(formData.endDate);
+      if (end < start) {
+        return toast({ 
+          title: "Timeline Error", 
+          description: `Your end time (${end.toLocaleTimeString()}) is set before the start time (${start.toLocaleTimeString()}). Please check the AM/PM settings.`, 
+          variant: "destructive" 
+        });
+      }
+    }
+
     setLoading(true);
     try {
-      const payload = {
-        ...formData,
-        registrationLimit: Number(formData.registrationLimit) || 0,
-        speakers: speakers.filter((s) => s.name.trim()),
-      };
-
-      if (eventData) {
-        await api.put(`/events/${eventData._id}`, payload);
-      } else {
-        await api.post("/events", payload);
+      // Use FormData for file upload
+      const data = new FormData();
+      Object.keys(formData).forEach(key => {
+        // Only append if value exists to avoid "null"/"undefined" strings
+        if (formData[key] !== null && formData[key] !== undefined) {
+          data.append(key, formData[key]);
+        }
+      });
+      data.append('speakers', JSON.stringify(speakers));
+      if (imageFile) {
+        data.append('image', imageFile);
+      } else if (eventData?.image) {
+        data.append('image', eventData.image);
       }
 
+      if (eventData) {
+        await api.put(`/events/${eventData._id}`, data);
+        toast({ title: "Success", description: "Event updated successfully" });
+      } else {
+        await api.post("/events", data);
+        toast({ 
+          title: "Success", 
+          description: user.role === "admin" ? "Event created and approved!" : "Event submitted for approval!" 
+        });
+      }
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to save event:", error);
+      console.error("Save error", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to save event",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -124,370 +183,293 @@ const CreateEventModal = ({ isOpen, onClose, onSuccess, eventData = null }) => {
   if (!isOpen) return null;
 
   const sections = [
-    { id: "basic", label: "📝 Basic Info" },
-    { id: "speakers", label: "🎤 Speakers" },
-    { id: "details", label: "📋 Details" },
+    { id: "basic", label: "Core", icon: <Layout size={14} /> },
+    { id: "specs", label: "Specs", icon: <Info size={14} /> },
+    { id: "speakers", label: "Speakers", icon: <Users size={14} /> },
+    { id: "prizes", label: "Rewards", icon: <Award size={14} /> },
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh]"
-      >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-[#0a0f18]/90 backdrop-blur-sm">
+      <div className="bg-white md:rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col h-full md:h-[90vh] lg:h-[85vh]">
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="px-6 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-[#0f172a] text-white flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-              <Sparkles className="text-indigo-600" size={20} />
-              {eventData ? "Edit Event" : "Create New Event"}
+            <h2 className="text-lg md:text-xl font-black tracking-tight flex items-center gap-3">
+              <Sparkles className="text-blue-400" size={20} />
+              {eventData ? "Modify Event" : "Create Event"}
             </h2>
-            <p className="text-sm text-slate-500">
-              {eventData ? "Update your event details" : "Draft your next big campus experience"}
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+              Configuration Panel v2.0
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <X size={20} />
-          </Button>
+          </button>
         </div>
 
-        {/* Section Tabs */}
-        <div className="flex border-b border-slate-100 bg-white">
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setActiveSection(s.id)}
-              className={`flex-1 py-3 text-sm font-bold transition-colors border-b-2 ${activeSection === s.id
-                  ? "text-indigo-600 border-indigo-600"
-                  : "text-slate-400 border-transparent hover:text-slate-600"
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+          {/* Section Selector (Mobile: Top Bar, Desktop: Sidebar) */}
+          <div className="flex md:flex-col overflow-x-auto md:overflow-y-auto bg-[#f8fafc] border-b md:border-b-0 md:border-r border-slate-200 p-2 md:p-6 gap-2 shrink-0 no-scrollbar">
+            {sections.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActiveSection(s.id)}
+                className={`flex items-center gap-2 md:gap-3 px-6 py-3 md:py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap md:w-full ${
+                  activeSection === s.id
+                    ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200"
+                    : "text-slate-400 hover:bg-white hover:text-indigo-600 hover:shadow-sm"
                 }`}
-            >
-              {s.label}
-            </button>
-          ))}
+              >
+                {s.icon}
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden bg-white">
+            <div className="p-6 md:p-8 flex-1 overflow-y-auto space-y-8 scrollbar-hide">
+              {activeSection === "basic" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Event Title</label>
+                      <Input
+                        placeholder="e.g. Code Odyssey 2026"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="h-12 text-base font-bold rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-indigo-500/20 shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Event Domain (Category)</label>
+                      <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v, category: "" })}>
+                        <SelectTrigger className="h-12 rounded-xl font-bold bg-slate-50/50">
+                          <SelectValue placeholder="Select Domain" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {EVENT_DOMAINS.map(d => <SelectItem key={d} value={d} className="font-medium text-xs py-2">{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Event Banner (from PC/Browser)</label>
+                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                      <div className="flex-1 w-full">
+                        <Input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="h-12 rounded-xl border-slate-200 font-bold bg-slate-50 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-indigo-600 file:text-white cursor-pointer"
+                        />
+                      </div>
+                      {imagePreview && (
+                        <div className="w-full md:w-32 h-20 rounded-2xl overflow-hidden border border-slate-100 shadow-sm shrink-0 bg-slate-100">
+                           <img src={imagePreview.startsWith('blob') ? imagePreview : getEventImageUrl(imagePreview, formData.category)} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                   <div className="grid grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 text-indigo-600">Specific Event Type</label>
+                      <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })} disabled={!formData.type || formData.type === 'other'}>
+                        <SelectTrigger className={`h-12 rounded-xl font-bold text-xs tracking-wide transition-all ${!formData.type ? 'bg-slate-50 opacity-50' : 'bg-slate-50/50 ring-2 ring-indigo-500/10'}`}>
+                          <SelectValue placeholder={formData.type ? "Search specifics..." : "Select Domain first"} />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {(EVENT_CATEGORIES[formData.type] || []).map(cat => (
+                            <SelectItem key={cat} value={cat} className="font-semibold text-xs py-2.5">{cat}</SelectItem>
+                          ))}
+                          <SelectItem value="Other" className="font-semibold text-xs py-2.5 text-slate-400">Other / Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Engagement Mode</label>
+                      <Select value={formData.mode} onValueChange={(v) => setFormData({ ...formData, mode: v })}>
+                        <SelectTrigger className="h-12 rounded-xl font-bold bg-slate-50/50 text-xs text-slate-600 tracking-wide">
+                          <SelectValue placeholder="Mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Offline">Offline</SelectItem>
+                          <SelectItem value="Online">Online</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
+                        Start Timeline
+                        <span className="text-[9px] text-indigo-500 font-black lowercase">(AM/PM)</span>
+                      </label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none" size={16} />
+                        <Input type="datetime-local" className="pl-12 h-12 rounded-xl border-slate-200 font-bold text-xs" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
+                        End Timeline
+                        <span className="text-[9px] text-slate-400 font-black lowercase">(AM/PM)</span>
+                      </label>
+                      <div className="relative">
+                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                        <Input type="datetime-local" className="pl-12 h-12 rounded-xl border-slate-200 font-bold text-xs" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Venue / Platform</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none" size={16} />
+                      <Input placeholder="Main Auditorium or Meeting Link" className="pl-12 h-12 rounded-xl border-slate-200 font-bold text-xs bg-slate-50/50" value={formData.venue} onChange={(e) => setFormData({ ...formData, venue: e.target.value })} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-4">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Event Description</label>
+                    <Textarea 
+                      placeholder="Detail the event objectives, agenda, and guidelines..."
+                      className="min-h-[120px] rounded-2xl border-slate-200 focus:ring-indigo-500/20 font-medium p-4"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeSection === "specs" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Host Department</label>
+                      <Select value={formData.department} onValueChange={(v) => setFormData({ ...formData, department: v })}>
+                        <SelectTrigger className="h-12 rounded-xl font-bold">
+                          <SelectValue placeholder="Department" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {DEPARTMENTS.map(d => (
+                            <SelectItem key={d} value={d} className="font-medium text-xs py-2.5">
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Participation Reach</label>
+                       <Select value={formData.participationLevel} onValueChange={(v) => setFormData({ ...formData, participationLevel: v })}>
+                         <SelectTrigger className="h-12 rounded-xl font-bold">
+                           <SelectValue placeholder="Select Reach" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="College">College Only</SelectItem>
+                           <SelectItem value="State">State Level</SelectItem>
+                           <SelectItem value="National">National Level</SelectItem>
+                         </SelectContent>
+                       </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Attendee Limit</label>
+                      <div className="relative">
+                        <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                        <Input type="number" className="pl-12 h-12 rounded-xl font-bold" value={formData.registrationLimit} onChange={(e) => setFormData({ ...formData, registrationLimit: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quick Toggle</label>
+                      <div className="flex items-center gap-3 h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl">
+                        <input type="checkbox" id="waitlist" className="w-5 h-5 accent-indigo-600 rounded-md cursor-pointer" checked={formData.enableWaitlist} onChange={(e) => setFormData({ ...formData, enableWaitlist: e.target.checked })} />
+                        <label htmlFor="waitlist" className="text-xs font-bold text-slate-600 cursor-pointer">Enable Waitlist</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {user?.role === "admin" && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assign Responsible Faculty</label>
+                      <Select value={formData.assignedFaculty} onValueChange={(v) => setFormData({ ...formData, assignedFaculty: v })}>
+                        <SelectTrigger className="h-12 rounded-xl border-indigo-100 font-bold"><SelectValue placeholder="Current Admin" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Self (System Admin)</SelectItem>
+                          {faculties.map(f => <SelectItem key={f._id} value={f._id}>{f.fullName}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Organizer Unit</label>
+                    <Input className="h-12 rounded-xl font-bold" value={formData.organizerName} onChange={(e) => setFormData({ ...formData, organizerName: e.target.value })} />
+                  </div>
+                </div>
+              )}
+
+              {activeSection === "speakers" && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Speaker Directory</h3>
+                    <Button type="button" size="sm" onClick={() => setSpeakers([...speakers, defaultSpeaker()])} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 font-bold text-[10px] uppercase tracking-wider">
+                      <Plus size={14} className="mr-1.5" /> Add Profile
+                    </Button>
+                  </div>
+                  {speakers.length === 0 && (
+                    <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                      <Users className="mx-auto mb-2 text-slate-300" size={32} />
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">No speakers added yet</p>
+                    </div>
+                  )}
+                  {speakers.map((s, idx) => (
+                    <div key={idx} className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm flex gap-4 items-start relative group">
+                      <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 text-[10px] font-black shrink-0">{idx + 1}</div>
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Input placeholder="Full Name" value={s.name} onChange={(e) => { const n = [...speakers]; n[idx].name = e.target.value; setSpeakers(n); }} className="h-10 rounded-lg font-bold" />
+                        <Input placeholder="Organization / Portfolio" value={s.organization} onChange={(e) => { const n = [...speakers]; n[idx].organization = e.target.value; setSpeakers(n); }} className="h-10 rounded-lg font-bold" />
+                        <Textarea placeholder="Short Biography" className="md:col-span-2 rounded-lg resize-none text-xs font-medium" rows={2} value={s.bio} onChange={(e) => { const n = [...speakers]; n[idx].bio = e.target.value; setSpeakers(n); }} />
+                      </div>
+                      <button type="button" onClick={() => setSpeakers(speakers.filter((_, i) => i !== idx))} className="absolute right-4 top-4 text-slate-300 hover:text-rose-600 transition-colors"><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {activeSection === "prizes" && (
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rules & Guidelines</label>
+                    <Textarea className="min-h-[160px] rounded-3xl border-slate-200 p-6 font-medium leading-relaxed shadow-inner bg-slate-50/50" placeholder="List the rules, eligibility, or code of conduct..." value={formData.rules} onChange={(e) => setFormData({ ...formData, rules: e.target.value })} />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gratification / Rewards</label>
+                    <div className="relative">
+                      <Award className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none" size={24} />
+                      <Input placeholder="Certificates, Prizes, Internship opportunities..." className="pl-14 h-16 rounded-3xl border-slate-200 font-bold" value={formData.prizeDetails} onChange={(e) => setFormData({ ...formData, prizeDetails: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 md:px-8 md:py-6 bg-white border-t border-slate-100 flex items-center justify-between gap-4 shrink-0">
+              <Button type="button" variant="ghost" onClick={onClose} className="px-10 rounded-xl h-12 font-black uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-50">Cancel</Button>
+              <Button type="submit" disabled={loading} className="min-w-[240px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-14 font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-indigo-600/30 active:scale-95 transition-all">
+                {loading ? "Processing..." : eventData ? "Synchronize Updates" : "Initialize Event"}
+              </Button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="p-6 overflow-y-auto flex-1 space-y-5">
-
-            {/* ======= BASIC INFO ======= */}
-            {activeSection === "basic" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Title *</label>
-                  <Input
-                    required
-                    placeholder="e.g. Annual Hackathon 2025"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="rounded-xl border-slate-200"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Type</label>
-                  <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-                    <SelectTrigger className="rounded-xl border-slate-200">
-                      <SelectValue placeholder="Select Type" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[120]">
-                      {["hackathon", "seminar", "tech-fest", "competition", "workshop", "other"].map((t) => (
-                        <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Category</label>
-                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                    <SelectTrigger className="rounded-xl border-slate-200">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[120]">
-                      {["Technical", "Non-Technical", "Seminar", "Workshop", "Hackathon", "Cultural", "Sports"].map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Participation Level</label>
-                  <Select value={formData.participationLevel} onValueChange={(v) => setFormData({ ...formData, participationLevel: v })}>
-                    <SelectTrigger className="rounded-xl border-slate-200">
-                      <SelectValue placeholder="Select Level" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[120]">
-                      <SelectItem value="College">College Level</SelectItem>
-                      <SelectItem value="State">State Level</SelectItem>
-                      <SelectItem value="National">National Level</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Start Date & Time *</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      required
-                      type="datetime-local"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="pl-10 rounded-xl border-slate-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">End Date & Time</label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      type="datetime-local"
-                      value={formData.endDate}
-                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      className="pl-10 rounded-xl border-slate-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Venue *</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      required
-                      placeholder="Auditorium, Lab, Online..."
-                      value={formData.venue}
-                      onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                      className="pl-10 rounded-xl border-slate-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Registration Limit</label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="0 = unlimited"
-                      value={formData.registrationLimit}
-                      onChange={(e) => setFormData({ ...formData, registrationLimit: e.target.value })}
-                      className="pl-10 rounded-xl border-slate-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pt-6">
-                  <AnimatedSwitch
-                    checked={formData.enableWaitlist}
-                    onChange={(val) => setFormData({ ...formData, enableWaitlist: val })}
-                    iconOn={<Check size={12} />}
-                  />
-                  <label className="text-sm font-semibold text-slate-700">Enable Waitlist</label>
-                </div>
-
-                {user?.role === "admin" && (
-                  <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-2">
-                      <ShieldCheck size={14} /> Assign to Faculty Manager
-                    </label>
-                    <Select 
-                      value={formData.assignedFaculty} 
-                      onValueChange={(v) => setFormData({ ...formData, assignedFaculty: v })}
-                    >
-                      <SelectTrigger className="rounded-xl border-indigo-200 bg-indigo-50/30">
-                        <SelectValue placeholder="Select a Faculty member to manage this event" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[120]">
-                        <SelectItem value="none">No dedicated faculty (Admin managed)</SelectItem>
-                        {faculties.map((f) => (
-                          <SelectItem key={f._id} value={f._id}>
-                            {f.fullName} ({f.collegeName || "Faculty"})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-[10px] text-slate-400">
-                      The assigned faculty will be able to mark attendance and manage registrations.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ======= SPEAKERS ======= */}
-            {activeSection === "speakers" && (
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-slate-500">Add speakers, panelists, or guests for this event.</p>
-                  <Button
-                    type="button"
-                    onClick={() => setSpeakers((p) => [...p, defaultSpeaker()])}
-                    size="sm"
-                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-                  >
-                    <Plus size={14} className="mr-1" /> Add Speaker
-                  </Button>
-                </div>
-
-                {speakers.length === 0 && (
-                  <div className="text-center py-12 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
-                    <Mic size={32} className="mx-auto mb-3 opacity-40" />
-                    <p>No speakers added yet</p>
-                  </div>
-                )}
-
-                {speakers.map((sp, idx) => (
-                  <div key={idx} className="bg-slate-50 rounded-2xl p-5 space-y-4 border border-slate-200">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-slate-700 text-sm">Speaker {idx + 1}</h4>
-                      <button
-                        type="button"
-                        onClick={() => setSpeakers((p) => p.filter((_, i) => i !== idx))}
-                        className="text-red-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Name *</label>
-                        <Input
-                          placeholder="Dr. Jane Smith"
-                          value={sp.name}
-                          onChange={(e) => updateSpeaker(idx, "name", e.target.value)}
-                          className="rounded-xl border-slate-200 text-sm h-9"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Organization</label>
-                        <Input
-                          placeholder="Google, IIT, etc."
-                          value={sp.organization}
-                          onChange={(e) => updateSpeaker(idx, "organization", e.target.value)}
-                          className="rounded-xl border-slate-200 text-sm h-9"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Session Title</label>
-                        <Input
-                          placeholder="Talk on AI Ethics"
-                          value={sp.sessionTitle}
-                          onChange={(e) => updateSpeaker(idx, "sessionTitle", e.target.value)}
-                          className="rounded-xl border-slate-200 text-sm h-9"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Session Time</label>
-                        <Input
-                          placeholder="10:00 AM – 11:00 AM"
-                          value={sp.sessionTime}
-                          onChange={(e) => updateSpeaker(idx, "sessionTime", e.target.value)}
-                          className="rounded-xl border-slate-200 text-sm h-9"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Bio</label>
-                        <Textarea
-                          placeholder="Short bio about the speaker..."
-                          value={sp.bio}
-                          onChange={(e) => updateSpeaker(idx, "bio", e.target.value)}
-                          rows={2}
-                          className="rounded-xl border-slate-200 text-sm resize-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">LinkedIn URL</label>
-                        <Input
-                          placeholder="https://linkedin.com/in/..."
-                          value={sp.socialLinks?.linkedin}
-                          onChange={(e) => updateSpeaker(idx, "socialLinks.linkedin", e.target.value)}
-                          className="rounded-xl border-slate-200 text-sm h-9"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Photo URL</label>
-                        <Input
-                          placeholder="https://..."
-                          value={sp.photoUrl}
-                          onChange={(e) => updateSpeaker(idx, "photoUrl", e.target.value)}
-                          className="rounded-xl border-slate-200 text-sm h-9"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* ======= DETAILS ======= */}
-            {activeSection === "details" && (
-              <div className="space-y-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Description *</label>
-                  <Textarea
-                    required
-                    placeholder="Tell us more about the event..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="rounded-xl border-slate-200 min-h-[120px]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Prize Details</label>
-                  <div className="relative">
-                    <Award className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <Input
-                      placeholder="e.g. 1st ₹5000, 2nd ₹3000, 3rd ₹1000"
-                      value={formData.prizeDetails}
-                      onChange={(e) => setFormData({ ...formData, prizeDetails: e.target.value })}
-                      className="pl-10 rounded-xl border-slate-200"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Rules & Regulations</label>
-                  <Textarea
-                    placeholder="Enter event rules..."
-                    value={formData.rules}
-                    onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
-                    className="rounded-xl border-slate-200 min-h-[100px]"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-5 border-t border-slate-100 flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1 rounded-2xl h-11 font-bold"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl h-11 font-bold shadow-lg shadow-indigo-100"
-            >
-              {loading ? "Saving..." : eventData ? "Update Event" : "Submit for Approval"}
-            </Button>
-          </div>
-        </form>
-      </motion.div>
+      </div>
     </div>
   );
 };

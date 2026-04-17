@@ -25,12 +25,13 @@ export const registerUser = async (req, res) => {
       collegeName,
       department,
       phoneNumber,
-      role
+      role,
+      status: role === "faculty" ? "pending" : "active"
     });
 
     return res.json({
-      message: "Signup Successful",
-      token: generateToken(user._id, user.role),
+      message: role === "faculty" ? "Signup Successful. Waiting for admin approval." : "Signup Successful",
+      token: user.status === "active" ? generateToken(user._id, user.role) : null,
       user
     });
   } catch (error) {
@@ -56,8 +57,11 @@ export const loginUser = async (req, res) => {
     }
 
     if (role !== user.role) {
-      console.log(`Login 400: Role mismatch. Expected ${user.role}, got ${role}`, email);
-      return res.status(400).json({ message: "Role does not match your account" });
+      return res.status(403).json({ message: "Incorrect role for this account" });
+    }
+
+    if (user.status !== "active") {
+      return res.status(401).json({ message: `Account ${user.status}. Please contact admin.` });
     }
 
     return res.json({

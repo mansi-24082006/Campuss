@@ -40,7 +40,7 @@ const LoginPage = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -99,10 +99,10 @@ const LoginPage = () => {
         />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50/50">
         {/* Animated Background Elements */}
-        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-[-15%] left-[5%] w-[30rem] h-[30rem] bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-[-15%] left-[5%] w-[30rem] h-[30rem] bg-violet-500/5 rounded-full blur-3xl animate-pulse delay-700" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -110,29 +110,29 @@ const LoginPage = () => {
           transition={{ duration: 0.5 }}
           className="relative w-full max-w-md"
         >
-          <Card className="glass-effect border-white/20 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] rounded-[2.5rem] overflow-hidden">
-            <CardHeader className="text-center pt-8 pb-4">
-              <div className="mx-auto w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm mb-4 border border-slate-100 dark:border-slate-800">
+          <Card className="bg-white border border-slate-200/60 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] rounded-[2.5rem] overflow-hidden">
+            <CardHeader className="text-center pt-10 pb-6">
+              <div className="mx-auto w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-5 border border-slate-100">
                 <img src="/favicon.png" alt="Logo" className="w-10 h-10" />
               </div>
-              <CardTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">
                 Welcome Back
               </CardTitle>
-              <CardDescription className="text-slate-500 dark:text-slate-400 font-medium">
+              <CardDescription className="text-slate-500 font-medium">
                 Choose your role and enter credentials
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="px-5 sm:px-8 pb-10">
+            <CardContent className="px-6 sm:px-10 pb-12">
               <form onSubmit={handleLogin} className="space-y-6">
                 {/* Role Tabs */}
                 <Tabs value={activeRole} onValueChange={setActiveRole} className="w-full">
-                  <TabsList className="grid grid-cols-3 bg-slate-100/80 dark:bg-slate-800/50 p-1 rounded-2xl h-auto min-h-[3rem]">
+                  <TabsList className="grid grid-cols-3 bg-slate-100/50 p-1 rounded-2xl h-auto min-h-[3rem]">
                     {roleData.map((role) => (
                       <TabsTrigger
                         key={role.key}
                         value={role.key}
-                        className="rounded-xl py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2"
+                        className="rounded-xl py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all duration-300 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2"
                       >
                         <role.icon className="h-4 w-4" />
                         <span className="font-bold text-[10px] sm:text-xs uppercase tracking-tight sm:tracking-normal">{role.label}</span>
@@ -144,32 +144,32 @@ const LoginPage = () => {
                 <div className="space-y-4">
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                      <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                     </div>
                     <Input
                       type="email"
                       placeholder="Email Address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-11 h-12 rounded-xl border-slate-200 dark:border-slate-800 focus:ring-indigo-600 focus:border-indigo-600 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm dark:text-white"
+                      className="pl-11 h-12 rounded-xl border-slate-200 focus:ring-indigo-600 focus:border-indigo-600 bg-slate-50/50 transition-all text-slate-900"
                     />
                   </div>
 
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                      <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                     </div>
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-11 pr-11 h-12 rounded-xl border-slate-200 dark:border-slate-800 focus:ring-indigo-600 focus:border-indigo-600 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm dark:text-white"
+                      className="pl-11 pr-11 h-12 rounded-xl border-slate-200 focus:ring-indigo-600 focus:border-indigo-600 bg-slate-50/50 transition-all text-slate-900"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     >
                       {showPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -197,7 +197,7 @@ const LoginPage = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className={`w-full h-12 rounded-2xl bg-gradient-to-r ${currentRoleInfo?.color || 'from-indigo-600 to-blue-600'} text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 active:scale-[0.98]`}
+                  className={`w-full h-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold text-lg shadow-lg shadow-indigo-600/20 hover:shadow-xl hover:shadow-indigo-600/30 transition-all duration-300 active:scale-[0.98] mt-2`}
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -205,13 +205,13 @@ const LoginPage = () => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2">
-                      <span>Sign In as {currentRoleInfo?.label}</span>
+                      <span>Sign In</span>
                       <ArrowRight className="h-5 w-5" />
                     </div>
                   )}
                 </Button>
 
-                <p className="text-center text-slate-500 font-medium">
+                <p className="text-center text-slate-500 font-medium pt-2">
                   New to CampusBuzz?{" "}
                   <Link to="/signup" className="text-indigo-600 font-bold hover:underline">
                     Create account

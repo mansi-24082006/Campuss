@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -61,74 +60,66 @@ const ContactPage = () => {
         <title>Contact Us - CampusBuzz</title>
         <meta name="description" content="Get in touch with the CampusBuzz team. We're here to help with any questions or feedback." />
       </Helmet>
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-16 px-4 min-h-screen">
+      <div className="bg-transparent py-20 px-4 min-h-screen transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h1 className="text-5xl md:text-6xl font-bold mb-4 gradient-text">
-              Get In Touch
+          <div className="text-center mb-24">
+            <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight leading-tight">
+              Get <span className="text-indigo-600">In Touch</span>
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-              Have questions, feedback, or need support? We'd love to hear from you.
+            <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
+              Have questions, feedback, or need support? Our team is ready to assist you.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
             {/* Contact Form */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <Card className="glass-effect border-0 shadow-lg p-4 sm:p-8">
-                <CardHeader>
-                  <CardTitle className="text-3xl text-slate-900 dark:text-white">Send us a Message</CardTitle>
-                  <CardDescription>
-                    Fill out the form and our team will get back to you shortly.
+            <div>
+              <Card className="bg-white border-slate-200/60 shadow-2xl shadow-slate-200/20 rounded-[3rem] p-4 sm:p-10 overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full opacity-50" />
+                <CardHeader className="relative z-10 px-0 pt-0">
+                  <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">Send us a Message</CardTitle>
+                  <CardDescription className="text-slate-500 font-medium mt-2">
+                    Fill out the form and we'll get back to you within 24 hours.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
+                <CardContent className="px-0 pb-0 mt-8 relative z-10">
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="space-y-3">
+                      <label htmlFor="name" className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Full Name</label>
                       <Input
                         id="name"
                         type="text"
                         placeholder="John Doe"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="mt-1 bg-white/70 dark:bg-slate-900/70 dark:text-white dark:border-slate-800"
+                        className="h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
                       />
                     </div>
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
+                    <div className="space-y-3">
+                      <label htmlFor="email" className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Email Address</label>
                       <Input
                         id="email"
                         type="email"
                         placeholder="you@example.com"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="mt-1 bg-white/70 dark:bg-slate-900/70 dark:text-white dark:border-slate-800"
+                        className="h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
                       />
                     </div>
-                    <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Message</label>
+                    <div className="space-y-3">
+                      <label htmlFor="message" className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Message</label>
                       <textarea
                         id="message"
                         rows="5"
                         placeholder="Your message here..."
                         value={formData.message}
                         onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-800 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm bg-white/70 dark:bg-slate-900/70 p-2 dark:text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium p-4 focus:outline-none"
                       ></textarea>
                     </div>
                     <Button
                       type="submit"
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3"
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-16 rounded-2xl font-black text-lg shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
                       size="lg"
                     >
                       Send Message
@@ -136,31 +127,28 @@ const ContactPage = () => {
                   </form>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
 
             {/* Contact Info */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="space-y-8"
-            >
+            <div className="space-y-10 lg:pt-10">
               {contactInfo.map((info, index) => (
-                <div key={index} className="flex items-start space-x-6">
+                <div key={index} className="group flex items-start space-x-8 p-8 bg-white border border-slate-200/60 rounded-[2.5rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 hover:-translate-y-2">
                   <div className="flex-shrink-0">
-                    <div className="p-4 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full w-fit">
-                      <info.icon className="h-8 w-8 text-white" />
+                    <div className="p-5 bg-indigo-50 rounded-[1.5rem] border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-sm">
+                      <info.icon className="h-8 w-8 text-indigo-600 group-hover:text-white transition-colors" />
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{info.title}</h3>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">{info.title}</h3>
                     <a
                       href={info.href}
-                      className="text-lg text-purple-600 hover:underline"
+                      target={info.title === "Find Us" ? "_blank" : "_self"}
+                      rel="noopener noreferrer"
+                      className="text-lg text-slate-500 font-bold hover:text-indigo-600 transition-colors inline-block leading-relaxed"
                       onClick={(e) => {
                         if (info.href === "#") {
                           e.preventDefault();
-                          toast({ title: "🚧 This feature isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀" });
+                          toast({ title: "Unavailable", description: "This feature is currently not active in this version." });
                         }
                       }}
                     >
@@ -169,7 +157,16 @@ const ContactPage = () => {
                   </div>
                 </div>
               ))}
-            </motion.div>
+
+              <div className="p-10 bg-indigo-600 rounded-[3rem] text-white shadow-2xl shadow-indigo-600/30 overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+                <h4 className="text-2xl font-black tracking-tight mb-4 relative z-10">Working Hours</h4>
+                <p className="text-indigo-100 font-medium leading-relaxed relative z-10">
+                  Monday - Friday: 9:00 AM - 6:00 PM<br />
+                  Weekend: Closed
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

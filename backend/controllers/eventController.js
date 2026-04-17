@@ -24,24 +24,57 @@ export const getEvents = async (req, res) => {
     if (req.query.level) query.participationLevel = req.query.level;
     if (req.query.type) query.type = req.query.type;
     if (req.query.category) query.category = req.query.category;
+    if (req.query.mode) query.mode = req.query.mode;
+    if (req.query.department && req.query.department !== "all") {
+      query.department = req.query.department;
+    }
+
+    // Search functionality
+    if (req.query.search) {
+      query.$or = [
+        { title: { $regex: req.query.search, $options: "i" } },
+        { description: { $regex: req.query.search, $options: "i" } },
+        { category: { $regex: req.query.search, $options: "i" } },
+      ];
+    }
 
     // Date filters
+    const now = new Date();
     if (req.query.dateFilter === "today") {
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      const end = new Date();
-      end.setHours(23, 59, 59, 999);
+      const start = new Date(now); start.setHours(0,0,0,0);
+      const end = new Date(now); end.setHours(23,59,59,999);
       query.date = { $gte: start, $lte: end };
     } else if (req.query.dateFilter === "upcoming") {
-      query.date = { $gte: new Date() };
+      query.date = { $gte: now };
+    } else if (req.query.dateFilter === "week") {
+      const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7);
+      query.date = { $gte: now, $lte: weekEnd };
+    } else if (req.query.dateFilter === "month") {
+      const monthEnd = new Date(now); monthEnd.setMonth(now.getMonth() + 1);
+      query.date = { $gte: now, $lte: monthEnd };
     }
 
     const events = await Event.find(query)
       .sort({ date: -1 })
       .populate("organizer", "fullName email")
       .populate("assignedFaculty", "fullName email");
-    res.json(events);
+
+    // Prepend host to image URL for frontend
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const processedEvents = events.map(event => {
+      const eventObj = event.toObject();
+      if (eventObj.image && eventObj.image.startsWith("/uploads")) {
+        eventObj.image = `${protocol}://${host}${eventObj.image}`;
+      }
+      return eventObj;
+    });
+
+    console.log(`[DEBUG] getEvents: Found ${processedEvents.length} events for user role ${req.user.role}`);
+    
+    res.json(processedEvents);
   } catch (error) {
+    console.error("[ERROR] getEvents:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -56,36 +89,91 @@ export const getEventById = async (req, res) => {
       .populate("waitlist", "fullName email")
       .populate("feedback.studentId", "fullName");
     if (!event) return res.status(404).json({ message: "Event not found" });
-    res.json(event);
+
+    const eventObj = event.toObject();
+    if (eventObj.image && eventObj.image.startsWith("/uploads")) {
+      const protocol = req.protocol;
+      const host = req.get("host");
+      eventObj.image = `${protocol}://${host}${eventObj.image}`;
+    }
+
+    res.json(eventObj);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// CREATE EVENT (Admin Only)
+// CREATE EVENT (Admin & Faculty)
 export const createEvent = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Only administrators can create events." });
+    const isFaculty = req.user.role === "faculty";
+    const isAdmin = req.user.role === "admin";
+
+    if (!isAdmin && !isFaculty) {
+      return res.status(403).json({ message: "Unauthorized to create events." });
     }
 
-    const assignedFacultyId = req.body.assignedFaculty === "none" ? null : req.body.assignedFaculty;
+    if (!req.body.title || !req.body.date) {
+      return res.status(400).json({ message: "Title and Date are required fields." });
+    }
 
-    const newEvent = new Event({
-      ...req.body,
+    const assignedFacultyId = req.body.assignedFaculty === "none" || req.body.assignedFaculty === "null" ? null : req.body.assignedFaculty;
+    
+    // Parse numeric fields if they come as strings from FormData
+    const registrationLimit = req.body.registrationLimit ? parseInt(req.body.registrationLimit) : 0;
+    
+    // Parse speakers JSON if it's a string
+    let speakers = [];
+    try {
+      if (req.body.speakers) {
+        speakers = typeof req.body.speakers === 'string' ? JSON.parse(req.body.speakers) : req.body.speakers;
+      }
+    } catch (err) {
+      console.error("Failed to parse speakers:", err);
+    }
+
+    // Handle Boolean fields from FormData
+    const enableWaitlist = req.body.enableWaitlist === "true" || req.body.enableWaitlist === true;
+
+    // Handle Image upload or fallback
+    let imagePath = "";
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    } else if (req.body.image && req.body.image !== "null" && req.body.image !== "undefined") {
+      imagePath = req.body.image;
+    }
+
+    const event = new Event({
+      title: req.body.title,
+      description: req.body.description,
+      date: req.body.date,
+      endDate: req.body.endDate,
+      category: req.body.category,
+      type: req.body.type,
+      venue: req.body.venue,
+      registrationLimit,
+      participationLevel: req.body.participationLevel,
+      mode: req.body.mode,
+      department: req.body.department,
+      organizerName: req.body.organizerName,
+      prizeDetails: req.body.prizeDetails,
+      rules: req.body.rules,
+      enableWaitlist,
+      speakers,
+      image: imagePath,
       createdBy: req.user.id,
-      // If an Admin assigns a faculty, that faculty becomes the 'organizer' (manager)
-      organizer: assignedFacultyId || req.user.id,
-      assignedFaculty: assignedFacultyId,
-      status: "approved", // Admin created events are auto-approved
+      organizer: isAdmin ? (assignedFacultyId || req.user.id) : req.user.id,
+      assignedFaculty: isAdmin ? assignedFacultyId : null,
+      status: isAdmin ? "approved" : "pending",
     });
 
-    const event = await newEvent.save();
+    await event.save();
 
     // 1. If an Admin assigns a faculty, notify that faculty immediately
-    if (req.user.role === "admin" && req.body.assignedFaculty) {
+    if (isAdmin && assignedFacultyId) {
       await createNotification({
-        recipient: req.body.assignedFaculty,
+        recipient: assignedFacultyId,
+        sender: req.user.id,
         message: `System Alert: You have been assigned as the organizer for "${event.title}".`,
         type: "info",
         link: `/faculty/events`
@@ -93,16 +181,22 @@ export const createEvent = async (req, res) => {
     }
 
     // 2. If an Admin creates an event, it's auto-approved. Notify ALL students!
-    if (req.user.role === "admin") {
+    if (isAdmin) {
       const allStudents = await User.find({ role: "student" }).select("_id");
-      for (const student of allStudents) {
-        await createNotification({
-          recipient: student._id,
-          message: `📢 Announcement: New event "${event.title}" is now open for registration! 🚀`,
-          type: "info",
-          link: `/event/${event._id}`
-        });
+      const broadcast = allStudents.map(student => ({
+        recipient: student._id,
+        sender: req.user.id,
+        message: `📢 Announcement: New event "${event.title}" is now open for registration! 🚀`,
+        type: "info",
+        link: `/event/${event._id}`
+      }));
+      if (broadcast.length > 0) {
+        const NotificationModel = (await import("../models/Notification.js")).default;
+        await NotificationModel.insertMany(broadcast);
       }
+    } else {
+      // 3. If a Faculty creates an event, maybe notify admins (Optional based on requirements)
+      // For now, it just sits in 'pending' for admin review
     }
 
     res.status(201).json(event);
@@ -124,6 +218,7 @@ export const updateEventStatus = async (req, res) => {
     // 1. Notify Organizer
     await createNotification({
       recipient: event.organizer,
+      sender: req.user.id,
       message: `Your event "${event.title}" has been ${status}.`,
       type: status === "approved" ? "success" : "error",
       link: `/event/${event._id}`
@@ -132,13 +227,16 @@ export const updateEventStatus = async (req, res) => {
     // 2. If approved, notify ALL students (The Announcement)
     if (status === "approved") {
       const allStudents = await User.find({ role: "student" }).select("_id");
-      for (const student of allStudents) {
-        await createNotification({
-          recipient: student._id,
-          message: `📢 New Event: "${event.title}" is now open for registration! Check it out. 🌟`,
-          type: "info",
-          link: `/event/${event._id}`
-        });
+      const broadcast = allStudents.map(student => ({
+        recipient: student._id,
+        sender: req.user.id,
+        message: `📢 New Event: "${event.title}" is now open for registration! Check it out. 🌟`,
+        type: "info",
+        link: `/event/${event._id}`
+      }));
+      if (broadcast.length > 0) {
+        const NotificationModel = (await import("../models/Notification.js")).default;
+        await NotificationModel.insertMany(broadcast);
       }
     }
 
@@ -182,6 +280,7 @@ export const registerForEvent = async (req, res) => {
     // Notify Student
     await createNotification({
       recipient: req.user.id,
+      sender: event.organizer, // From the organizer
       message: `Successfully registered for "${event.title}"!`,
       type: "success",
       link: `/event/${event._id}`
@@ -288,6 +387,36 @@ export const markAttendance = async (req, res) => {
     validStudents.forEach(id => currentAttended.add(id.toString()));
     
     event.attendedStudents = Array.from(currentAttended);
+    
+    // Check Settings for Auto-Certification
+    const Settings = (await import("../models/Settings.js")).default;
+    const settings = await Settings.findOne();
+    
+    if (settings?.certificateAutoIssue) {
+      // Auto-verify all students who just got marked present
+      for (const studentId of validStudents) {
+        if (!event.verifiedStudents.some(s => s.toString() === studentId.toString())) {
+          event.verifiedStudents.push(studentId);
+          
+          // Create Certificate Record
+          const user = await User.findById(studentId);
+          if (user) {
+            const certId = `CB-CERT-${event._id.toString().toUpperCase().slice(-6)}-${user._id.toString().toUpperCase().slice(-4)}`;
+            await Certificate.create({
+              certificateId: certId,
+              studentId: user._id, 
+              eventId: event._id,
+              metadata: {
+                studentName: user.fullName,
+                eventTitle: event.title,
+                organizerName: "CampusBuzz"
+              }
+            });
+          }
+        }
+      }
+    }
+    
     await event.save();
 
     const pointsMap = {
@@ -311,6 +440,7 @@ export const markAttendance = async (req, res) => {
     for (const studentId of validStudents) {
       await createNotification({
         recipient: studentId,
+        sender: req.user.id,
         message: `Attendance marked for "${event.title}". Next step: Faculty verification for certificate.`,
         type: "success",
         link: "/dashboard?tab=registered"
@@ -361,6 +491,7 @@ export const verifyStudentForCertificate = async (req, res) => {
     // Notify Student
     await createNotification({
       recipient: studentId,
+      sender: req.user.id,
       message: `Congratulations! Your certificate for "${event.title}" has been verified and is ready for download.`,
       type: "success",
       link: "/dashboard?tab=certificates"
@@ -368,10 +499,11 @@ export const verifyStudentForCertificate = async (req, res) => {
 
     // Send Certificate Achievement Email
     if (user && user.email) {
+      const campusBuzzCertId = `CB-CERT-${event._id.toString().toUpperCase().slice(-6)}-${user._id.toString().toUpperCase().slice(-4)}`;
       await sendEmail({
         to: user.email,
         subject: `Certificate Ready: ${event.title} 📜`,
-        html: getCertificateTemplate(user.fullName, event, `${process.env.FRONTEND_URL}/verify/${event._id}`)
+        html: getCertificateTemplate(user.fullName, event, `${process.env.FRONTEND_URL}/verify/${campusBuzzCertId}`)
       });
     }
 
@@ -430,6 +562,29 @@ export const updateWinnerList = async (req, res) => {
 
     event.winners = winners;
     event.status = "completed";
+    
+    // Auto-verify all attended students if not already verified
+    const Settings = (await import("../models/Settings.js")).default;
+    const settings = await Settings.findOne();
+    
+    if (settings?.certificateAutoIssue) {
+      for (const studentId of event.attendedStudents) {
+        if (!event.verifiedStudents.some(s => s.toString() === studentId.toString())) {
+          event.verifiedStudents.push(studentId);
+          const user = await User.findById(studentId);
+          if (user) {
+            const certId = `CB-CERT-${event._id.toString().toUpperCase().slice(-6)}-${user._id.toString().toUpperCase().slice(-4)}`;
+            await Certificate.create({
+              certificateId: certId,
+              studentId: user._id,
+              eventId: event._id,
+              metadata: { studentName: user.fullName, eventTitle: event.title, organizerName: "CampusBuzz" }
+            });
+          }
+        }
+      }
+    }
+    
     await event.save();
 
     for (const winner of winners) {
@@ -441,6 +596,7 @@ export const updateWinnerList = async (req, res) => {
       // Notify Winner
       await createNotification({
         recipient: winner.studentId,
+        sender: req.user.id,
         message: `Congratulations! You won ${winner.position} in "${event.title}"! 🎉`,
         type: "success",
         link: "/dashboard?tab=profile"
@@ -451,6 +607,7 @@ export const updateWinnerList = async (req, res) => {
     for (const studentId of event.attendedStudents) {
       await createNotification({
         recipient: studentId,
+        sender: req.user.id,
         message: `Event "${event.title}" is officially completed! How was it? Leave your feedback! ⭐`,
         type: "info",
         link: "/dashboard?tab=registered"
@@ -467,8 +624,10 @@ export const updateWinnerList = async (req, res) => {
 export const getLeaderboard = async (req, res) => {
   try {
     const { type, value } = req.query;
-    let query = {};
+    let query = { role: "student" };
     if (type === "college") query.collegeName = value;
+    if (type === "state") query.state = value;
+    // National level: no geographic query limits
 
     const students = await User.find({ role: "student" })
       .sort({ points: -1 })
@@ -485,17 +644,34 @@ export const getLeaderboard = async (req, res) => {
 export const getRecommendations = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    const dept = user?.department || "Technical";
+    
+    // Find events matching user department or top upcoming events
     const recommendations = await Event.find({
       status: "approved",
       $or: [
-        { category: req.user.department },
-        { description: { $regex: req.user.department || "", $options: "i" } }
+        { category: { $regex: dept, $options: "i" } },
+        { description: { $regex: dept, $options: "i" } }
       ]
-    }).limit(5);
+    })
+    .sort({ date: 1 })
+    .limit(5);
 
-    res.json(recommendations);
+    // Prepend host to image URL
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const processedRecommendations = recommendations.map(event => {
+      const eventObj = event.toObject();
+      if (eventObj.image && eventObj.image.startsWith("/uploads")) {
+        eventObj.image = `${protocol}://${host}${eventObj.image}`;
+      }
+      return eventObj;
+    });
+
+    res.json(processedRecommendations);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("[ERROR] getRecommendations:", error);
+    res.json([]); // Return empty for a silent fail to keep dashboard alive
   }
 };
 
@@ -527,19 +703,136 @@ export const getAdminReports = async (req, res) => {
     const topStudents = await User.find({ role: "student" })
       .sort({ points: -1 })
       .limit(10)
-      .select("fullName email department points badges eventsAttended");
+      .select("fullName email department points badges eventsAttended state collegeName flags");
 
-    res.json({ topEvents, topStudents });
+    // Aggregate stats by State (State/National Data)
+    const stateStats = await User.aggregate([
+      { $match: { role: "student" } },
+      {
+        $group: {
+          _id: "$state",
+          totalStudents: { $sum: 1 },
+          avgPoints: { $avg: "$points" },
+          totalPoints: { $sum: "$points" },
+        },
+      },
+      { $sort: { totalPoints: -1 } },
+    ]);
+
+    // Aggregate stats by College (Manage Colleges)
+    const collegeStats = await User.aggregate([
+      { $match: { role: "student" } },
+      {
+        $group: {
+          _id: "$collegeName",
+          state: { $first: "$state" },
+          totalStudents: { $sum: 1 },
+          totalPoints: { $sum: "$points" },
+        },
+      },
+      { $sort: { totalPoints: -1 } },
+      { $limit: 15 }
+    ]);
+
+    // Flagged Users (Monitor Fraud)
+    const flaggedUsers = await User.find({ "flags.0": { $exists: true } })
+      .select("fullName collegeName flags status")
+      .populate("flags.flaggedBy", "fullName role");
+
+    res.json({ topEvents, topStudents, stateStats, collegeStats, flaggedUsers });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 export const updateEvent = async (req, res) => {
-  res.json(await Event.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+  try {
+    const updateData = { ...req.body };
+    // Handle Boolean fields from FormData
+    const enableWaitlist = updateData.enableWaitlist === "true" || updateData.enableWaitlist === true;
+    
+    // Parse speakers JSON if it's a string
+    let parsedSpeakers = updateData.speakers;
+    if (updateData.speakers && typeof updateData.speakers === 'string') {
+      try {
+        parsedSpeakers = JSON.parse(updateData.speakers);
+      } catch (err) {
+        console.error("Failed to parse speakers in update:", err);
+      }
+    }
+
+    // Handle Image upload or fallback
+    let imagePath = updateData.image; 
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    } else if (imagePath === "null" || imagePath === "undefined") {
+      imagePath = "";
+    }
+
+    // Explicitly map fields to avoid junk from req.body
+    const mappedData = {
+      title: updateData.title,
+      description: updateData.description,
+      date: updateData.date,
+      endDate: updateData.endDate,
+      category: updateData.category,
+      type: updateData.type,
+      venue: updateData.venue,
+      registrationLimit: updateData.registrationLimit ? parseInt(updateData.registrationLimit) : undefined,
+      participationLevel: updateData.participationLevel,
+      mode: updateData.mode,
+      department: updateData.department,
+      organizerName: updateData.organizerName,
+      prizeDetails: updateData.prizeDetails,
+      rules: updateData.rules,
+      enableWaitlist: enableWaitlist,
+      speakers: parsedSpeakers,
+      image: imagePath
+    };
+
+    // Remove undefined fields so they don't overwrite with null
+    Object.keys(mappedData).forEach(key => mappedData[key] === undefined && delete mappedData[key]);
+
+    const oldEvent = await Event.findById(req.params.id);
+    const event = await Event.findByIdAndUpdate(req.params.id, mappedData, { new: true });
+
+    // If Date or Venue changed, notify all registered students
+    if (oldEvent && (oldEvent.date?.toString() !== event.date?.toString() || oldEvent.venue !== event.venue)) {
+      const students = event.registeredStudents || [];
+      for (const studentId of students) {
+        await createNotification({
+          recipient: studentId,
+          sender: req.user.id,
+          message: `📢 Update: The details for "${event.title}" have changed. Check the event page for new info!`,
+          type: "info",
+          link: `/event/${event._id}`
+        });
+      }
+    }
+
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 export const deleteEvent = async (req, res) => {
-  await Event.findByIdAndDelete(req.params.id);
-  res.json({ message: "Event deleted" });
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    // Check permissions
+    if (req.user.role === "faculty") {
+      const isOwner = event.createdBy.toString() === req.user.id.toString();
+      const isAssigned = event.assignedFaculty?.toString() === req.user.id.toString();
+      if (!isOwner && !isAssigned) {
+        return res.status(403).json({ message: "Unauthorized to delete this event." });
+      }
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
+    res.json({ message: "Event deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

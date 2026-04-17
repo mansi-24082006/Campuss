@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "preinstall": "chmod -R 755 node_modules/.bin",
     "dev": "vite",
     "build": "npx vite build",
     "preview": "vite preview"
