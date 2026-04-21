@@ -86,7 +86,7 @@ const AvailableEvents = ({ events = [], onRegister, registeredEventIds = [], bui
           const catColor = CATEGORY_COLORS[event.category] || CATEGORY_COLORS[event.type] || "bg-slate-100 text-slate-700";
 
           return (
-            <div key={event._id} className="group">
+            <div key={event._id} className="group hover-lift">
               <Card className="relative overflow-hidden h-full flex flex-col border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-300 bg-white border-0 ring-1 ring-slate-100">
                 {/* Event Image */}
                 <div className="relative h-48 overflow-hidden">
@@ -202,12 +202,14 @@ const AvailableEvents = ({ events = [], onRegister, registeredEventIds = [], bui
                           {seatStatus?.full ? (event.enableWaitlist ? "Enter Waitlist" : "Seats Full") : "Enroll Now"}
                         </Button>
                       )}
-                      <Link
-                        to={`/event/${event._id}`}
+                      <a
+                        href={`/event/${event._id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-center text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center justify-center gap-2 hover:text-indigo-600 transition-colors"
                       >
                         <ExternalLink size={12} /> Full Analytics & Insight
-                      </Link>
+                      </a>
                     </div>
                   </div>
                 </CardContent>

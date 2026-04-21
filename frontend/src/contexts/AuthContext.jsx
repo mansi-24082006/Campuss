@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/lib/axios';
+import { subscribeUserToPush } from '@/utils/pushConfig';
 
 const AuthContext = createContext();
 
@@ -33,6 +34,9 @@ export const AuthProvider = ({ children }) => {
         const fullUser = { ...data, token: parsedUser.token };
         setUser(fullUser);
         localStorage.setItem('campusbuzz_user', JSON.stringify(fullUser));
+        
+        // Subscribe to push notifications
+        subscribeUserToPush();
       } catch (error) {
         console.error("Session verification failed:", error);
         if (error.response?.status === 401) {
@@ -50,6 +54,9 @@ export const AuthProvider = ({ children }) => {
     const fullUser = { ...userData, token };
     setUser(fullUser);
     localStorage.setItem('campusbuzz_user', JSON.stringify(fullUser));
+    
+    // Subscribe to push notifications
+    subscribeUserToPush();
   };
 
   const logout = () => {

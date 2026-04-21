@@ -38,6 +38,10 @@ import ProtectedRoute from "@/components/ui/ProtectedRoute";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import DashboardRedirect from "@/components/DashboardRedirect";
+import CustomCursor from "@/components/ui/CustomCursor";
+import PageTransition from "@/components/layout/PageTransition";
+import ScrollProgress from "@/components/ui/ScrollProgress";
+import { AnimatePresence } from "framer-motion";
 
 // Wrapper to handle conditional Navbar/Footer
 const AppContent = () => {
@@ -47,102 +51,107 @@ const AppContent = () => {
     location.pathname.startsWith("/admin");
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-900 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-white text-slate-900 transition-colors duration-300 overflow-x-hidden">
+      <ScrollProgress />
+      <CustomCursor />
       <Navbar />
       <main className="flex-grow pt-20">
-        <Routes>
-          {/* -------------------- PUBLIC ROUTES -------------------- */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            {/* -------------------- PUBLIC ROUTES -------------------- */}
+            <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+            <Route path="/features" element={<PageTransition><FeaturesPage /></PageTransition>} />
+            <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
+            <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
+            <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+            <Route path="/signup" element={<PageTransition><SignupPage /></PageTransition>} />
+            <Route path="/register" element={<PageTransition><SignupPage /></PageTransition>} />
 
-          {/* -------------------- DYNAMIC DASHBOARD -------------------- */}
-          <Route path="/dashboard" element={<DashboardRedirect />} />
+            {/* -------------------- DYNAMIC DASHBOARD -------------------- */}
+            <Route path="/dashboard" element={<PageTransition><DashboardRedirect /></PageTransition>} />
 
-          {/* -------------------- STUDENT ROUTES -------------------- */}
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute allowedRoles={["student"]}>
-                <StudentDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/student/available-events"
-            element={
-              <ProtectedRoute allowedRoles={["student"]}>
-                <AvailableEvents />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/student/my-events"
-            element={
-              <ProtectedRoute allowedRoles={["student"]}>
-                <MyEvents />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/student/profile"
-            element={
-              <ProtectedRoute allowedRoles={["student"]}>
-                <ProfileSection />
-              </ProtectedRoute>
-            }
-          />
+            {/* -------------------- STUDENT ROUTES -------------------- */}
+            <Route
+              path="/student"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <PageTransition><StudentDashboard /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/available-events"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <PageTransition><AvailableEvents /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/my-events"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <PageTransition><MyEvents /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/profile"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <PageTransition><ProfileSection /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* -------------------- FACULTY ROUTES -------------------- */}
-          <Route
-            path="/faculty"
-            element={
-              <ProtectedRoute allowedRoles={["faculty"]}>
-                <FacultyDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/faculty/my-events"
-            element={
-              <ProtectedRoute allowedRoles={["faculty"]}>
-                <FacultyMyEvents />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/faculty/students"
-            element={
-              <ProtectedRoute allowedRoles={["faculty"]}>
-                <FacultyStudentList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/faculty/profile"
-            element={
-              <ProtectedRoute allowedRoles={["faculty"]}>
-                <FacultyProfile />
-              </ProtectedRoute>
-            }
-          />
+            {/* -------------------- FACULTY ROUTES -------------------- */}
+            <Route
+              path="/faculty"
+              element={
+                <ProtectedRoute allowedRoles={["faculty"]}>
+                  <PageTransition><FacultyDashboard /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/faculty/my-events"
+              element={
+                <ProtectedRoute allowedRoles={["faculty"]}>
+                  <PageTransition><FacultyMyEvents /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/faculty/students"
+              element={
+                <ProtectedRoute allowedRoles={["faculty"]}>
+                  <PageTransition><FacultyStudentList /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/faculty/profile"
+              element={
+                <ProtectedRoute allowedRoles={["faculty"]}>
+                  <PageTransition><FacultyProfile /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* -------------------- ADMIN ROUTES -------------------- */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* -------------------- ADMIN ROUTES -------------------- */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <PageTransition><AdminDashboard /></PageTransition>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/verify/:certId" element={<CertificateVerifier />} />
-        </Routes>
+            <Route path="/event/:id" element={<PageTransition><EventDetails /></PageTransition>} />
+            <Route path="/verify/:certId" element={<PageTransition><CertificateVerifier /></PageTransition>} />
+          </Routes>
+        </AnimatePresence>
       </main>
       {!isDashboard && <Footer />}
       <Toaster />

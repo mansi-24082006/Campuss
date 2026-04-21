@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 import Notification from "../models/Notification.js";
+import PushSubscription from "../models/PushSubscription.js";
+import webpush from "web-push";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+webpush.setVapidDetails(
+  `mailto:${process.env.VAPID_EMAIL}`,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 // @desc    Get user notifications
 // @route   GET /api/notifications
@@ -55,9 +66,73 @@ export const markAllAsRead = async (req, res) => {
 export const createNotification = async (data) => {
   try {
     const notification = await Notification.create(data);
+    
+    // Trigger Push Notification
+    sendPushNotification(data.recipient, {
+      title: "CampusBuzz Update",
+      body: data.message,
+      link: data.link || "/dashboard"
+    });
+
     return notification;
   } catch (error) {
     console.error("Error creating notification:", error);
+  }
+};
+
+// @desc    Subscribe to push notifications
+// @route   POST /api/notifications/subscribe
+// @access  Private
+export const subscribePush = async (req, res) => {
+  try {
+    const { subscription, deviceType } = req.body;
+    
+    // Update or create subscription
+    await PushSubscription.findOneAndUpdate(
+      { "subscription.endpoint": subscription.endpoint },
+      { 
+        user: req.user.id, 
+        subscription, 
+        deviceType: deviceType || "desktop" 
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(201).json({ message: "Subscription added successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Internal function to send push notifications
+const sendPushNotification = async (userId, payload) => {
+  try {
+    const subscriptions = await PushSubscription.find({ user: userId });
+    
+    const pushPayload = JSON.stringify({
+      title: payload.title || "CampusBuzz",
+      body: payload.body,
+      icon: "/logo192.png", // Ensure this exists or use a default
+      badge: "/logo192.png",
+      data: {
+        url: payload.link || "/dashboard"
+      }
+    });
+
+    const sendPromises = subscriptions.map(sub => 
+      webpush.sendNotification(sub.subscription, pushPayload)
+        .catch(err => {
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            // Subscription expired or no longer valid
+            return PushSubscription.deleteOne({ _id: sub._id });
+          }
+          console.error("Error sending push:", err);
+        })
+    );
+
+    await Promise.all(sendPromises);
+  } catch (error) {
+    console.error("Push notification error:", error);
   }
 };
 
@@ -88,6 +163,15 @@ export const broadcastNotification = async (req, res) => {
 
     if (notifications.length > 0) {
       await Notification.insertMany(notifications);
+      
+      // Trigger Push for all participants
+      students.forEach(student => {
+        sendPushNotification(student._id, {
+          title: `Event Update: ${event.title}`,
+          body: message,
+          link: `/event/${event._id}`
+        });
+      });
     }
 
     // 2. Send Emails in Background (Don't await whole loop to respond faster)
@@ -104,7 +188,7 @@ export const broadcastNotification = async (req, res) => {
       }
     });
 
-    res.json({ message: `Announcement broadcasted to ${students.length} students via Dashboard and Email.` });
+    res.json({ message: `Announcement broadcasted to ${students.length} students via Dashboard, Email and Push.` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -160,9 +244,18 @@ export const globalBroadcast = async (req, res) => {
 
     if (notifications.length > 0) {
       await Notification.insertMany(notifications);
+      
+      // Trigger Push for all students
+      students.forEach(student => {
+        sendPushNotification(student._id, {
+          title: "📢 Global Announcement",
+          body: message,
+          link: "/dashboard"
+        });
+      });
     }
 
-    res.json({ message: `Message broadcasted to ${students.length} users.` });
+    res.json({ message: `Message broadcasted to ${students.length} users via Dashboard and Push.` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -203,6 +296,15 @@ export const facultyBroadcast = async (req, res) => {
 
     if (notifications.length > 0) {
       await Notification.insertMany(notifications);
+      
+      // Trigger Push for registered students
+      students.forEach(student => {
+        sendPushNotification(student._id, {
+          title: "📢 Faculty Announcement",
+          body: message,
+          link: "/dashboard"
+        });
+      });
     }
 
     // Send Emails in Background
@@ -221,7 +323,7 @@ export const facultyBroadcast = async (req, res) => {
       }
     });
 
-    res.json({ message: `Message broadcasted to ${students.length} students via Dashboard and Email.` });
+    res.json({ message: `Message broadcasted to ${students.length} students via Dashboard, Email and Push.` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

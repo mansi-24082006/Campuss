@@ -65,7 +65,7 @@ const AdminStats = ({ stats = {} }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
           >
-            <Card className="group relative overflow-hidden rounded-[1.25rem] border border-slate-200/60 bg-white transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-1">
+            <Card className="group relative overflow-hidden rounded-[1.25rem] border border-slate-200/60 bg-white hover-lift">
               <CardContent className="p-4 sm:p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div

@@ -1,142 +1,75 @@
 # CampusBuzz 🚀
 
-**CampusBuzz** is a comprehensive event management platform designed to connect students, faculty, and organizers within an educational ecosystem. It streamlines the entire event lifecycle—from creation and promotion to registration and feedback—all within a unified, intuitive interface.
+**CampusBuzz** is a premium, full-stack event management platform designed for educational ecosystems. It bridges the gap between students, faculty, and administrators with a high-performance, visually stunning interface and robust automation.
 
-## ✨ Key Features
+## 🔗 Live Links
+- **Live Demo:** [Check it out on Vercel](https://your-frontend-url.vercel.app)
+- **Backend API:** [Hosted on Render](https://your-backend-url.onrender.com)
+- **Status:** Production Ready ✅
+
+## ✨ Premium Features
 
 ### 🎓 For Students
-- **Event Discovery**: Browse and search events by category, date, or popularity.
-- **One-Click Registration**: Seamlessly register for events with a single click.
-- **Digital Certificates**: Automatically receive verifiable digital certificates upon completion.
-- **Smart Notifications**: Stay updated with real-time reminders and announcements.
-- **AI Chatbot**: Get instant answers to queries about events, schedules, and campus life.
+- **Inverting Liquid Cursor**: A high-end, responsive interaction experience.
+- **Magnetic UI Elements**: Smooth, interactive buttons and navigation.
+- **Smart Registration**: One-click event signups with automated PDF certificates.
+- **Real-time Notifications**: In-app alerts and email reminders via Nodemailer.
+- **AI-Powered Search**: Smart filtering by domain, date, and engagement mode.
 
 ### 👨‍🏫 For Faculty & Organizers
-- **Event Creation**: Easily create and manage events with rich media and detailed descriptions.
-- **Audience Targeting**: Target specific departments, years, or student groups.
-- **Registration Management**: Track registrations, manage waitlists, and download attendee lists.
-- **Feedback System**: Collect and analyze student feedback through an integrated rating and comment system.
-- **Analytics Dashboard**: Gain insights into event performance, attendance, and engagement.
+- **Event Studio**: Rich media support for event creation.
+- **Dynamic Filtering**: Professional 2-level classification (Domain & Type).
+- **Analytics Dashboard**: Real-time tracking of registration and attendance.
+- **Feedback Engine**: Direct insight into student sentiment and engagement.
 
-### 🛡️ Security & Verification
-- **Certificate Verification**: Verify the authenticity of digital certificates using a unique QR code or ID.
-- **Secure Authentication**: Role-based access control for students, faculty, and administrators.
+### 🛡️ Core Infrastructure
+- **Role-Based Access (RBAC)**: Secure routes for Students, Faculty, and Admins.
+- **Push Notifications**: WebPush API integration for instant reach.
+- **Production-Ready CORS**: Dynamic origin handling for secure cross-domain requests.
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **Framework**: React 18
-- **Styling**: Tailwind CSS
-- **UI Components**: Shadcn UI
-- **State Management**: React Context API
-- **Routing**: React Router
-- **Icons**: Lucide React
-
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: MongoDB
-- **Authentication**: JWT (JSON Web Tokens)
-- **Email Service**: Nodemailer
+| Layer | Stack |
+| :--- | :--- |
+| **Frontend** | React 18, Vite, Framer Motion, Tailwind CSS, Shadcn UI |
+| **Backend** | Node.js, Express, JWT, Node-Cron, Nodemailer |
+| **Database** | MongoDB Atlas |
+| **Deployment** | Vercel (Frontend), Render (Backend) |
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB (local or cloud)
-- Email credentials (for sending notifications)
+- Node.js (v18+)
+- MongoDB Atlas Account
+- Gemini API Key (for AI features)
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone & Install**
    ```bash
-   git clone <repository-url>
-   cd CampussBuzz
+   git clone https://github.com/mansi-24082006/Campuss.git
+   cd Campuss
+   npm install
    ```
 
-2. **Backend Setup**
-   ```bash
-   cd backend
-   npm install
-   # Create .env file based on .env.example
-   cp .env.example .env
-   # Configure database and email credentials in .env
-   npm run dev
-   ```
+2. **Environment Setup**
+   Configure your `.env` files in both `frontend/` and `backend/` based on the provided patterns.
 
-3. **Frontend Setup**
+3. **Run Locally**
    ```bash
-   cd frontend
-   npm install
-   # Create .env file based on .env.example
-   cp .env.example .env
-   # Configure API URL in .env
-   npm run dev
+   # Backend
+   cd backend && npm run dev
+   
+   # Frontend
+   cd frontend && npm run dev
    ```
 
 ## 📂 Project Structure
-
-```
-CampussBuzz/
-├── backend/                # Express.js API
-│   ├── config/             # Database configuration
-│   ├── controllers/        # Request handlers
-│   ├── middleware/         # Auth, error handling
-│   ├── models/             # Mongoose schemas
-│   ├── routes/             # API routes
-│   ├── utils/              # Email, helpers
-│   └── server.js           # Application entry point
-├── frontend/               # React application
-│   ├── components/         # Reusable components
-│   ├── pages/              # Page components
-│   ├── lib/                # API clients, utilities
-│   ├── contexts/           # Auth context
-│   └── public/             # Static assets
-├── .gitignore              # Git ignore rules
-├── package.json            # Project dependencies
-└── README.md               # Project documentation
-```
-
-## 🔐 Authentication
-
-CampusBuzz uses role-based authentication with three distinct user types:
-
-- **Student**: Access to event discovery, registration, and personal dashboard
-- **Faculty**: Event creation, student management, and analytics
-- **Admin**: System-wide management and configuration
-
-## 📧 Email Notifications
-
-The system sends automated emails for:
-- Registration confirmations
-- Event reminders (1 hour before)
-- Certificate availability
-
-## 📊 Analytics
-
-Faculty and admins can view comprehensive analytics including:
-- Total registrations
-- Event attendance rates
-- Feedback scores
-- Engagement metrics
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-2. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-3. Push to the branch (`git push origin feature/AmazingFeature`)
-4. Open a Pull Request
+- `backend/`: Core API, models, and notification engine.
+- `frontend/`: React components, custom hooks, and Framer Motion animations.
 
 ## 📄 License
-
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 Support
-
-For issues or questions, please open an issue in the repository.
-
 ---
-
-**Built with ❤️ for the Campus Community**
+**Built with ❤️ for the Modern Campus**

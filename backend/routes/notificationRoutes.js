@@ -7,6 +7,7 @@ import {
   globalBroadcast,
   facultyBroadcast,
   getSentNotifications,
+  subscribePush
 } from "../controllers/notificationController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
@@ -22,5 +23,6 @@ router.get("/sent", allowRoles("faculty", "admin"), getSentNotifications);
 router.post("/broadcast/:eventId", allowRoles("faculty", "admin"), broadcastNotification);
 router.post("/global-broadcast", allowRoles("admin"), globalBroadcast);
 router.post("/faculty-broadcast", allowRoles("faculty"), facultyBroadcast);
+router.post("/subscribe", subscribePush);
 
 export default router;

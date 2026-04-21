@@ -4,7 +4,7 @@ import {
   Megaphone, CheckCircle2, MessageSquare,
   ArrowRight, Star, LayoutDashboard,
   GraduationCap, MessageCircle, UserCircle, Menu, Search,
-  Bell, Sparkles, LogOut, Settings, Plus, Edit2, Save, X, Phone, Building, Mail, MapPin, User as UserIcon
+  Sparkles, LogOut, Settings, Plus, Edit2, Save, X, Phone, Building, Mail, MapPin, User as UserIcon
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,6 @@ import FeedbackTab from "./FeedbackTab";
 import CreateEventModal from "./CreateEventModal";
 import Footer from "@/components/layout/Footer";
 import { getAvatarUrl } from "@/lib/avatar";
-import NotificationCenter from "@/components/NotificationCenter";
 import api from "@/lib/axios";
 
 const FacultyDashboard = () => {
@@ -251,7 +250,6 @@ const FacultyDashboard = () => {
                 className="w-72 pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm font-medium focus:ring-2 ring-indigo-500/20 transition-all outline-none"
               />
             </div>
-            <NotificationCenter />
           </div>
         </header>
 

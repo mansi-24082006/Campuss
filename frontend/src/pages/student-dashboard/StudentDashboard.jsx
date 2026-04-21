@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   Sparkles, Filter, ChevronLeft, Search, Clock, CalendarDays, Zap,
-  Trophy, Target, Bell, MapPin, FileText, User, Award, X, LayoutGrid,
+  Trophy, Target, MapPin, FileText, User, Award, X, LayoutGrid,
   History, GraduationCap, UserCircle, MessageSquarePlus, Menu, ShieldCheck,
   LayoutDashboard, Star, LogOut, Heart
 } from "lucide-react";
@@ -31,7 +31,6 @@ import AvailableEvents from "./AvailableEvents";
 import MyEvents from "./MyEvents";
 import ProfileSection from "./ProfileSection";
 import CertificatesTab from "./CertificatesTab";
-import NotificationCenter from "@/components/NotificationCenter";
 import Footer from "@/components/layout/Footer";
 import { DEPARTMENTS } from "@/lib/departments";
 import { EVENT_DOMAINS, EVENT_CATEGORIES } from "@/lib/eventCategories";
@@ -187,19 +186,25 @@ const StudentDashboard = () => {
             </div>
           </div>
 
-          <nav className="space-y-1.5">
-            {NavItems.map((item) => (
-              <button
+          <nav className="space-y-1.5 flex-1">
+            {NavItems.map((item, idx) => (
+              <motion.button
                 key={item.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === item.id
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                className={`group w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === item.id
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                   }`}
               >
-                <item.icon size={20} className={activeTab === item.id ? "text-white" : "text-slate-400"} />
+                <item.icon size={20} className={`${activeTab === item.id ? "text-white" : "text-slate-400 group-hover:text-indigo-600"} transition-colors`} />
                 {item.label}
-              </button>
+                {activeTab === item.id && (
+                  <motion.div layoutId="student-active" className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_#fff]" />
+                )}
+              </motion.button>
             ))}
           </nav>
         </div>
@@ -254,7 +259,6 @@ const StudentDashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <NotificationCenter />
             <div className="h-8 w-px bg-slate-200 hidden sm:block" />
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">

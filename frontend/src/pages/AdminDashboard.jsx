@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,12 +14,10 @@ import {
   Settings2,
   Activity,
   Menu,
-  Bell,
   ShieldCheck,
   LogOut
 } from "lucide-react";
 import api from "@/lib/axios";
-import NotificationCenter from "@/components/NotificationCenter";
 
 import AdminStats from "@/components/admin/AdminStats";
 import EventManagementTab from "@/components/admin/EventManagementTab";
@@ -111,18 +110,24 @@ const AdminDashboard = () => {
           </div>
 
           <nav className="space-y-1.5 flex-1">
-            {TABS.map((tab) => (
-              <button
+            {TABS.map((tab, idx) => (
+              <motion.button
                 key={tab.value}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
                 onClick={() => setActiveTab(tab.value)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === tab.value
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                className={`group w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-300 ${activeTab === tab.value
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                   }`}
               >
-                <tab.icon size={20} className={activeTab === tab.value ? "text-white" : "text-slate-400"} />
+                <tab.icon size={20} className={`${activeTab === tab.value ? "text-white" : "text-slate-400 group-hover:text-indigo-600"} transition-colors`} />
                 {tab.label}
-              </button>
+                {activeTab === tab.value && (
+                  <motion.div layoutId="admin-active" className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_#fff]" />
+                )}
+              </motion.button>
             ))}
           </nav>
         </div>
@@ -177,8 +182,7 @@ const AdminDashboard = () => {
                 className="w-72 pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm font-medium focus:ring-2 ring-indigo-500/20 transition-all outline-none"
               />
             </div>
-            <NotificationCenter />
-          </div>
+                      </div>
         </header>
 
         {/* Inner Content Container */}
@@ -262,13 +266,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
-                <h3 className="text-lg font-black mb-2">Technical Support</h3>
-                <p className="text-indigo-100 text-sm mb-6">Database level issues or server errors? Contact the dev team.</p>
-                <Button variant="secondary" className="w-full rounded-xl bg-white/10 border-0 text-white hover:bg-white/20">
-                  Contact Support
-                </Button>
-              </div>
+
             </div>
           </div>
         </div>
