@@ -33,13 +33,6 @@ html {
 
 * {
   border-color: hsl(var(--border) / 0.5);
-  cursor: none !important; /* Hide default cursor to use custom one */
-}
-
-@media (max-width: 1024px) {
-  * {
-    cursor: auto !important; /* Show default cursor on mobile/tablets */
-  }
 }
 
 body {

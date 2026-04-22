@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,11 @@ const LandingPage = () => {
     mouseY.set(moveY);
   };
 
+  const parallaxBgX = useTransform(mouseX, (value) => value / 50);
+  const parallaxBgY = useTransform(mouseY, (value) => value / 50);
+  const parallaxTextX = useTransform(mouseX, (value) => value / 30);
+  const parallaxTextY = useTransform(mouseY, (value) => value / 30);
+
   return (
     <>
       <Helmet>
@@ -55,15 +60,15 @@ const LandingPage = () => {
         <meta name="description" content="Join CampusBuzz to discover, register, and participate in exciting college events." />
       </Helmet>
 
-      <div className="w-full bg-white transition-all cursor-none" onMouseMove={handleMouseMove}>
+      <div className="w-full bg-white transition-all" onMouseMove={handleMouseMove}>
         {/* Hero Section with Background Image */}
         <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20 px-4">
           {/* Background Image Container */}
           <div className="absolute inset-0 z-0">
             <motion.div 
               style={{
-                x: mouseX.get() / 50,
-                y: mouseY.get() / 50,
+                x: parallaxBgX,
+                y: parallaxBgY,
               }}
               className="absolute inset-0 w-full h-full"
             >
@@ -81,8 +86,8 @@ const LandingPage = () => {
             <motion.div 
               {...fadeIn}
               style={{
-                x: mouseX.get() / 30,
-                y: mouseY.get() / 30,
+                x: parallaxTextX,
+                y: parallaxTextY,
               }}
             >
               <h1 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter text-white drop-shadow-2xl">

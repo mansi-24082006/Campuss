@@ -38,7 +38,6 @@ import ProtectedRoute from "@/components/ui/ProtectedRoute";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import DashboardRedirect from "@/components/DashboardRedirect";
-import CustomCursor from "@/components/ui/CustomCursor";
 import PageTransition from "@/components/layout/PageTransition";
 import ScrollProgress from "@/components/ui/ScrollProgress";
 import { AnimatePresence } from "framer-motion";
@@ -53,7 +52,6 @@ const AppContent = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 transition-colors duration-300 overflow-x-hidden">
       <ScrollProgress />
-      <CustomCursor />
       <Navbar />
       <main className="flex-grow pt-20">
         <AnimatePresence mode="wait">

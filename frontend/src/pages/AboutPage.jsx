@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Users, Zap, Target } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Reveal from '@/components/ui/Reveal';
 
 const AboutPage = () => {
   const teamMembers = [
@@ -36,18 +37,22 @@ const AboutPage = () => {
       <div className="bg-transparent py-20 px-4 transition-colors duration-300 min-h-screen">
         {/* Hero Section */}
         <div className="max-w-7xl mx-auto text-center mb-24">
-          <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight leading-tight">
-            Connecting Every Corner of <span className="text-indigo-600">Campus Life</span>
-          </h1>
+          <Reveal>
+            <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight leading-tight">
+              Connecting Every Corner of <span className="text-indigo-600">Campus Life</span>
+            </h1>
+          </Reveal>
 
-          <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
-            CampusBuzz was born from a simple idea: to create a single, dynamic hub for all college events, empowering communities through technology.
-          </p>
+          <Reveal delay={0.2}>
+            <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
+              CampusBuzz was born from a simple idea: to create a single, dynamic hub for all college events, empowering communities through technology.
+            </p>
+          </Reveal>
         </div>
 
         {/* Mission & Vision */}
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 mb-32">
-          <div>
+          <Reveal direction="left">
             <Card className="h-full bg-white border-slate-200/60 p-10 text-center rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-500 hover:-translate-y-2">
               <div className="p-5 bg-indigo-50 rounded-3xl w-fit mx-auto mb-6 border border-indigo-100">
                 <Zap className="h-8 w-8 text-indigo-600" />
@@ -57,9 +62,9 @@ const AboutPage = () => {
                 To empower students, faculty, and administrators by providing an intuitive platform for seamless event discovery and participation.
               </p>
             </Card>
-          </div>
+          </Reveal>
 
-          <div>
+          <Reveal direction="right">
             <Card className="h-full bg-white border-slate-200/60 p-10 text-center rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-500 hover:-translate-y-2">
               <div className="p-5 bg-violet-50 rounded-3xl w-fit mx-auto mb-6 border border-violet-100">
                 <Target className="h-8 w-8 text-violet-600" />
@@ -69,7 +74,7 @@ const AboutPage = () => {
                 To be the essential digital companion for every college campus, fostering a vibrant and engaged student community globally.
               </p>
             </Card>
-          </div>
+          </Reveal>
         </div>
 
         {/* Team Section */}
@@ -88,7 +93,7 @@ const AboutPage = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {teamMembers.map((member, index) => (
-              <div key={index} className="h-full">
+              <Reveal key={index} delay={index * 0.1} direction="up">
                 <Card className="bg-white border-slate-200/60 text-center p-10 rounded-[3rem] shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-500 ease-out group overflow-hidden h-full flex flex-col transform hover:-translate-y-3 hover:scale-[1.02] hover:rotate-[0.5deg]">
 
                   <div className="relative mb-8">
@@ -122,7 +127,7 @@ const AboutPage = () => {
                   </CardContent>
 
                 </Card>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
