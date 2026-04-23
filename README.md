@@ -3,8 +3,7 @@
 **CampusBuzz** is a premium, full-stack event management platform designed for educational ecosystems. It bridges the gap between students, faculty, and administrators with a high-performance, visually stunning interface and robust automation.
 
 ## 🔗 Live Links
-- **Live Demo:** [Check it out on Vercel](https://your-frontend-url.vercel.app)
-- **Backend API:** [Hosted on Render](https://your-backend-url.onrender.com)
+- **Live Demo:** [Check it out on Vercel](https://campuss-buzz-topaz.vercel.app)
 - **Status:** Production Ready ✅
 
 ## ✨ Premium Features
