@@ -18,6 +18,9 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Email already registered" });
     }
 
+    // Force admin role if email matches ADMIN_EMAIL
+    const finalRole = email === process.env.ADMIN_EMAIL ? "admin" : role;
+
     const user = await User.create({
       fullName,
       email,
@@ -25,8 +28,8 @@ export const registerUser = async (req, res) => {
       collegeName,
       department,
       phoneNumber,
-      role,
-      status: role === "faculty" ? "pending" : "active"
+      role: finalRole,
+      status: (finalRole === "faculty" && email !== process.env.ADMIN_EMAIL) ? "pending" : "active"
     });
 
     return res.json({
@@ -54,6 +57,13 @@ export const loginUser = async (req, res) => {
     if (!checkPassword) {
       console.log("Login 400: Invalid password", email);
       return res.status(400).json({ message: "Invalid password" });
+    }
+
+    // Force admin role if email matches ADMIN_EMAIL
+    if (email === process.env.ADMIN_EMAIL && user.role !== "admin") {
+      user.role = "admin";
+      user.status = "active";
+      await user.save();
     }
 
     if (role !== user.role) {

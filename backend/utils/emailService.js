@@ -116,3 +116,52 @@ export const getAnnouncementTemplate = (userName, event, message, type) => `
   </div>
 </div>
 `;
+
+export const getContactAdminTemplate = (name, email, message) => `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+  <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 20px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
+    <h2 style="color: #ffffff; margin: 0; font-size: 24px;">New Contact Inquiry</h2>
+  </div>
+  
+  <div style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+    <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px; text-transform: uppercase; font-weight: bold;">Sender Details</p>
+    <p style="margin: 5px 0; color: #1e293b; font-size: 16px;"><strong>Name:</strong> ${name}</p>
+    <p style="margin: 5px 0; color: #1e293b; font-size: 16px;"><strong>Email:</strong> ${email}</p>
+  </div>
+
+  <div style="background-color: #ffffff; border: 1.5px solid #f1f5f9; border-radius: 12px; padding: 20px;">
+    <p style="margin: 0 0 10px 0; color: #64748b; font-size: 14px; text-transform: uppercase; font-weight: bold;">Message Content</p>
+    <div style="color: #334155; line-height: 1.6; font-size: 16px; white-space: pre-wrap;">${message}</div>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+    <p style="color: #94a3b8; font-size: 12px;">Sent via CampusBuzz Official Contact Form</p>
+  </div>
+</div>
+`;
+
+export const getContactUserAckTemplate = (name, message) => `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <div style="display: inline-block; padding: 12px; background-color: #f0fdf4; border-radius: 50%; margin-bottom: 15px;">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <h2 style="color: #1e293b; margin: 0; font-size: 24px;">Message Received!</h2>
+    <p style="color: #64748b; margin-top: 8px;">We'll get back to you shortly</p>
+  </div>
+
+  <p style="color: #334155; font-size: 16px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
+  <p style="color: #475569; font-size: 16px; line-height: 1.6;">Thank you for contacting CampusBuzz. We've successfully received your message and our team is already looking into it. Expect a response within the next 24 hours.</p>
+
+  <div style="margin: 25px 0; padding: 20px; background-color: #f8fafc; border-radius: 12px; border-left: 4px solid #10b981;">
+    <p style="margin: 0 0 10px 0; color: #64748b; font-size: 13px; text-transform: uppercase;">A copy of your message:</p>
+    <p style="margin: 0; color: #475569; font-style: italic;">"${message}"</p>
+  </div>
+
+  <p style="color: #334155; font-size: 16px; margin-top: 30px;">Best Regards,<br/><strong style="color: #4f46e5;">The CampusBuzz Team</strong></p>
+
+  <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+    <p style="color: #94a3b8; font-size: 11px;">You are receiving this because you used the contact form on CampusBuzz.</p>
+  </div>
+</div>
+`;

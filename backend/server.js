@@ -12,6 +12,7 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 
 import notificationRoutes from "./routes/notificationRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 import cron from "node-cron";
 import Event from "./models/Event.js";
 import User from "./models/User.js";
@@ -110,6 +111,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Start Server
 app.listen(PORT, () => {
