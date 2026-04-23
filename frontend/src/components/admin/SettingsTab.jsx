@@ -26,16 +26,6 @@ import { Badge } from "@/components/ui/badge";
 const SettingsTab = ({ toast }) => {
   const settingsButtons = [
     {
-      label: "Global Broadcast",
-      feature: "Global announcement",
-      icon: Megaphone,
-    },
-    {
-      label: "Emergency Alert",
-      feature: "Emergency alert",
-      icon: Bell,
-    },
-    {
       label: "Security Settings",
       feature: "Security settings",
       icon: ShieldCheck,

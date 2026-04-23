@@ -30,6 +30,10 @@ export const submitContactForm = async (req, res) => {
     res.status(200).json({ success: true, message: "Your message has been sent successfully!" });
   } catch (error) {
     console.error("Contact Form Error:", error);
-    res.status(500).json({ message: "Failed to send message. Please try again later." });
+    res.status(500).json({ 
+      message: process.env.NODE_ENV === "development" 
+        ? `Email Error: ${error.message}` 
+        : "Failed to send message. Please try again later." 
+    });
   }
 };

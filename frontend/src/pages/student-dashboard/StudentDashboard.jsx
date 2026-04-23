@@ -34,6 +34,7 @@ import CertificatesTab from "./CertificatesTab";
 import Footer from "@/components/layout/Footer";
 import { DEPARTMENTS } from "@/lib/departments";
 import { EVENT_DOMAINS, EVENT_CATEGORIES } from "@/lib/eventCategories";
+import BroadcastBanner from "@/components/student/BroadcastBanner";
 
 const FILTER_CHIPS = [
   { label: "All Hubs", value: "all", icon: LayoutGrid },
@@ -278,6 +279,7 @@ const StudentDashboard = () => {
 
           {activeTab === "events" && (
             <section className="space-y-10">
+              <BroadcastBanner />
               <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
                 <div>
                   <div className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] mb-3">
@@ -477,6 +479,7 @@ const StudentDashboard = () => {
 
           {activeTab === "registered" && (
             <div className="space-y-8">
+              <BroadcastBanner />
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2">My Schedule</p>

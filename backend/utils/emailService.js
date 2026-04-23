@@ -11,6 +11,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Verify connection configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("📧 Email Service Error:", error.message);
+    console.error("💡 Hint: If using Gmail, you likely need an 'App Password' instead of your regular password.");
+  } else {
+    console.log("📧 Email Service is ready!");
+  }
+});
+
 export const sendEmail = async ({ to, subject, html }) => {
   try {
     const mailOptions = {
@@ -24,9 +34,13 @@ export const sendEmail = async ({ to, subject, html }) => {
     console.log("Email sent: %s", info.messageId);
     return info;
   } catch (error) {
-    console.error("Error sending email:", error);
-    // Suppress error in development if credentials missing
-    return null;
+    console.error("Nodemailer Error Details:", {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      user: process.env.EMAIL_USER
+    });
+    throw error; // Re-throw to be caught by the controller
   }
 };
 
