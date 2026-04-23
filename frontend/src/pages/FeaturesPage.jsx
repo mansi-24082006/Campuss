@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Users, Trophy, BookOpen, Zap, Star, ShieldCheck, BarChart2, MessageSquare } from 'lucide-react';
+import { Calendar, Users, BookOpen, Zap, Star, ShieldCheck, MessageSquare } from 'lucide-react';
 import Reveal from '@/components/ui/Reveal';
 
 const FeaturesPage = () => {
@@ -49,9 +49,12 @@ const FeaturesPage = () => {
         <title>Features - CampusBuzz</title>
         <meta name="description" content="Explore the powerful features of CampusBuzz, designed to enhance the college event experience for everyone." />
       </Helmet>
+
       <div className="bg-transparent py-20 px-4 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
+
+          {/* --- Centered Header Section --- */}
+          <div className="flex flex-col items-center justify-center text-center mb-20">
             <Reveal>
               <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight">
                 Platform <span className="text-indigo-600">Features</span>
@@ -63,10 +66,15 @@ const FeaturesPage = () => {
               </p>
             </Reveal>
           </div>
+          {/* ------------------------------- */}
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {featureList.map((feature, index) => (
-              <Reveal key={index} delay={index * 0.1} direction={index % 2 === 0 ? "left" : "right"}>
+              <Reveal
+                key={index}
+                delay={index * 0.1}
+                direction={index % 2 === 0 ? "left" : "right"}
+              >
                 <Card className="bg-white border-slate-200/60 h-full shadow-xl shadow-slate-200/20 rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 hover:-translate-y-2 group">
                   <CardHeader className="items-center text-center p-8 pb-4">
                     <div className="p-5 bg-indigo-50 border border-indigo-100 rounded-3xl w-fit mb-6 group-hover:scale-110 transition-transform duration-500">
