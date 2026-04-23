@@ -35,8 +35,9 @@ const AboutPage = () => {
       </Helmet>
 
       <div className="bg-transparent py-20 px-4 transition-colors duration-300 min-h-screen">
-        {/* Hero Section */}
-        <div className="max-w-7xl mx-auto text-center mb-24">
+
+        {/* --- Hero Section (Centered) --- */}
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center mb-24">
           <Reveal>
             <h1 className="text-5xl md:text-7xl font-black mb-6 text-slate-900 tracking-tight leading-tight">
               Connecting Every Corner of <span className="text-indigo-600">Campus Life</span>
@@ -77,18 +78,24 @@ const AboutPage = () => {
           </Reveal>
         </div>
 
-        {/* Team Section */}
+        {/* --- Team Section (Centered Header) --- */}
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <div className="p-4 bg-emerald-50 rounded-3xl w-fit mx-auto mb-6 border border-emerald-100">
-              <Users className="h-10 w-10 text-emerald-600" />
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black mb-4 text-slate-900 tracking-tight">
-              Meet the Team
-            </h2>
-            <p className="text-xl text-slate-500 font-medium">
-              The passionate team working behind the scenes to build the future of campus interaction.
-            </p>
+          <div className="flex flex-col items-center text-center mb-20">
+            <Reveal>
+              <div className="p-4 bg-emerald-50 rounded-3xl w-fit mx-auto mb-6 border border-emerald-100">
+                <Users className="h-10 w-10 text-emerald-600" />
+              </div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <h2 className="text-4xl md:text-6xl font-black mb-4 text-slate-900 tracking-tight">
+                Meet the Team
+              </h2>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <p className="text-xl text-slate-500 font-medium max-w-2xl">
+                The passionate team working behind the scenes to build the future of campus interaction.
+              </p>
+            </Reveal>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -98,7 +105,6 @@ const AboutPage = () => {
 
                   <div className="relative mb-8">
                     <div className="absolute inset-0 bg-indigo-600/10 rounded-full scale-110 blur-xl group-hover:scale-150 transition-all duration-500" />
-
                     <Avatar className="w-40 h-40 mx-auto relative border-4 border-white shadow-xl">
                       <AvatarImage
                         src={member.image}
@@ -115,9 +121,11 @@ const AboutPage = () => {
                     <CardTitle className="text-2xl font-black text-slate-900 tracking-tight transition-colors duration-300 group-hover:text-indigo-600">
                       {member.name}
                     </CardTitle>
-                    <CardDescription className="text-indigo-600 font-black uppercase text-xs tracking-[0.2em] mt-2 bg-indigo-50 inline-block px-4 py-1.5 rounded-full">
-                      {member.role}
-                    </CardDescription>
+                    <div className="mt-2">
+                      <CardDescription className="text-indigo-600 font-black uppercase text-xs tracking-[0.2em] bg-indigo-50 inline-block px-4 py-1.5 rounded-full">
+                        {member.role}
+                      </CardDescription>
+                    </div>
                   </CardHeader>
 
                   <CardContent className="p-0 mt-6">
